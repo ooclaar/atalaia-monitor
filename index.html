@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Atalaia - Monitoramento de Ping e Portas</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-content">
+        <h1>🔍 Atalaia</h1>
+        <p class="subtitle">Monitoramento Profissional de Ping e Portas em Tempo Real</p>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Seção de Adição -->
+      <section class="add-section">
+        <h2>Adicionar Novo Destino</h2>
+        <div class="form-group">
+          <div class="input-row">
+            <div class="input-field">
+              <label for="ipInput">Endereço IP</label>
+              <input type="text" id="ipInput" placeholder="ex: 192.168.1.1" />
+            </div>
+            <div class="input-field">
+              <label for="typeSelect">Tipo de Teste</label>
+              <select id="typeSelect">
+                <option value="port">Porta Específica</option>
+                <option value="ping">Ping (ICMP)</option>
+              </select>
+            </div>
+            <div class="input-field" id="portFieldContainer">
+              <label for="portInput">Porta</label>
+              <input type="number" id="portInput" placeholder="ex: 80" min="1" max="65535" />
+            </div>
+            <div class="input-field">
+              <label for="nameInput">Nome/Descrição</label>
+              <input type="text" id="nameInput" placeholder="ex: Servidor Web" />
+            </div>
+          </div>
+          <div class="button-group">
+            <button id="addBtn" class="btn btn-primary">Adicionar Destino</button>
+            <button id="testAllBtn" class="btn btn-secondary">Testar Todos Agora</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Seção de Configuração -->
+      <section class="config-section">
+        <h2>Configurações</h2>
+        <div class="config-group">
+          <label for="intervalInput">Intervalo de Teste (segundos)</label>
+          <input type="number" id="intervalInput" value="30" min="5" max="3600" />
+          <button id="saveConfigBtn" class="btn btn-small">Salvar</button>
+          <span id="autoTestStatus" class="status-badge">Auto-teste: Desativado</span>
+          <label style="margin-left: 20px;">
+            <input type="checkbox" id="notificationsToggle" checked />
+            Ativar Notificações
+          </label>
+        </div>
+      </section>
+
+      <!-- Seção de Destinos -->
+      <section class="targets-section">
+        <h2>Destinos Cadastrados</h2>
+        <div id="targetsList" class="targets-list">
+          <div class="empty-state">
+            <p>Nenhum destino cadastrado. Adicione um novo destino acima!</p>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="renderer.js"></script>
+</body>
+</html>
