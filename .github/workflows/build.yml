@@ -14,15 +14,28 @@ jobs:
         os: [windows-latest, ubuntu-latest, macos-latest]
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22 # Atualizado para evitar o aviso de depreciação
           cache: 'npm'
-      - run: npm install
-      - run: npm run build
+          
+      - name: Instalar Dependências
+        run: npm install
+        
+      - name: Build da Aplicação
+        run: npm run build
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - uses: actions/upload-artifact@v4
+          
+      - name: Verificar diretório de saída
+        shell: bash
+        run: ls -R dist/ || echo "Diretório dist não encontrado"
+          
+      - name: Upload de Artefatos
+        uses: actions/upload-artifact@v4
         with:
           name: Atalaia-${{ matrix.os }}
           path: dist/
+          if-no-files-found: error # Força erro se não encontrar os arquivos
