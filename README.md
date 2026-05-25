@@ -46,3 +46,4 @@ npm run build
 
 ---
 Desenvolvido por **Ramon Alonso**.
+Configuração de e-mail atualizada
