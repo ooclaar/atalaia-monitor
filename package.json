@@ -7,22 +7,27 @@
     "start": "electron .",
     "build": "electron-builder"
   },
-  "author": "Chief",
+  "author": "Ramon Alonso",
   "license": "MIT",
   "devDependencies": {
     "electron": "^31.0.0",
     "electron-builder": "^24.13.3"
   },
   "dependencies": {
-    "lowdb": "^5.1.0",
-    "ping": "^1.0.0"
+    "ping": "^0.4.4"
   },
   "build": {
-    "appId": "com.gaudium.atalaia",
+    "appId": "com.ramonalonso.atalaia",
     "productName": "Atalaia",
     "win": {
       "target": "portable",
-      "icon": null
+      "icon": "build/icon.ico"
+    },
+    "linux": {
+      "target": "AppImage"
+    },
+    "mac": {
+      "target": "dmg"
     },
     "directories": {
       "output": "dist"
