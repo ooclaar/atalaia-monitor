@@ -18,24 +18,27 @@ jobs:
       - name: Configurar Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 22 # Atualizado para evitar o aviso de depreciação
+          node-version: 22
           cache: 'npm'
           
       - name: Instalar Dependências
         run: npm install
         
-      - name: Build da Aplicação
+      - name: Build da Aplicação (Windows/Linux)
+        if: matrix.os != 'macos-latest'
         run: npm run build
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          
-      - name: Verificar diretório de saída
-        shell: bash
-        run: ls -R dist/ || echo "Diretório dist não encontrado"
+
+      - name: Build da Aplicação (macOS Universal)
+        if: matrix.os == 'macos-latest'
+        run: npx electron-builder --mac --universal
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           
       - name: Upload de Artefatos
         uses: actions/upload-artifact@v4
         with:
           name: Atalaia-${{ matrix.os }}
           path: dist/
-          if-no-files-found: error # Força erro se não encontrar os arquivos
+          if-no-files-found: error
