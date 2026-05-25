@@ -3,146 +3,154 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Atalaia - Monitoramento</title>
+  <title>Atalaia · Health Checker</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <!-- Barra de Título Customizada (Windows Style) -->
-  <div class="title-bar">
-    <span style="flex: 1">Atalaia · Monitoramento de Saúde</span>
+  <div class="app-window">
+    <!-- Barra de Título do Windows -->
+    <div class="title-bar">
+      <div class="title-bar-content">
+        <span class="title-text">Atalaia · Health Checker</span>
+      </div>
+      <div class="title-bar-controls">
+        <button class="title-btn">−</button>
+        <button class="title-btn">□</button>
+        <button class="title-btn close">✕</button>
+      </div>
+    </div>
+
+    <!-- Conteúdo Principal -->
+    <div class="main-content">
+      <!-- Cabeçalho -->
+      <div class="dashboard-header">
+        <div class="header-left">
+          <h1>Monitores</h1>
+          <p class="header-subtitle" id="headerSubtitle">
+            <span class="dot online"></span> 10 endpoints · última varredura há 3 segundos · próxima em 27s
+          </p>
+        </div>
+        <div class="header-right">
+          <input type="text" class="search-box" id="searchBox" placeholder="Buscar host, IP ou porta">
+        </div>
+      </div>
+
+      <!-- Barra de Ferramentas -->
+      <div class="toolbar">
+        <div class="toolbar-left">
+          <button class="btn btn-primary" id="openAddModal">
+            <span class="btn-icon">+</span> Novo monitor
+          </button>
+          <button class="btn" id="testAllBtn">
+            <span class="btn-icon">🔄</span> Verificar agora
+          </button>
+          <button class="btn" id="pauseAllBtn">
+            <span class="btn-icon">⏸</span> Pausar todos
+          </button>
+          <button class="btn" id="filterBtn">
+            <span class="btn-icon">⊙</span> Filtrar <span class="filter-badge" id="filterBadge" style="display: none;">2</span>
+          </button>
+          <button class="btn" id="exportBtn">
+            <span class="btn-icon">⬇</span> Exportar
+          </button>
+        </div>
+        <div class="toolbar-right">
+          <div class="view-toggle">
+            <button class="view-btn active" data-view="table">Tabela</button>
+            <button class="view-btn" data-view="cards">Cards</button>
+            <button class="view-btn" data-view="compact">Compacto</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cards de Status -->
+      <div class="status-cards">
+        <div class="status-card">
+          <div class="status-card-dot online"></div>
+          <div class="status-card-content">
+            <div class="status-card-label">ONLINE</div>
+            <div class="status-card-value" id="cardOnline">8</div>
+          </div>
+        </div>
+        <div class="status-card">
+          <div class="status-card-dot slow"></div>
+          <div class="status-card-content">
+            <div class="status-card-label">LENTO</div>
+            <div class="status-card-value" id="cardSlow">1</div>
+          </div>
+        </div>
+        <div class="status-card">
+          <div class="status-card-dot offline"></div>
+          <div class="status-card-content">
+            <div class="status-card-label">OFFLINE</div>
+            <div class="status-card-value" id="cardOffline">1</div>
+          </div>
+        </div>
+        <div class="status-card">
+          <div class="status-card-label-only">LAT. MÉDIA</div>
+          <div class="status-card-value" id="cardLatency">17 ms</div>
+        </div>
+        <div class="status-card">
+          <div class="status-card-label-only">UPTIME 24H</div>
+          <div class="status-card-value" id="cardUptime">99,82%</div>
+        </div>
+      </div>
+
+      <!-- Tabela de Monitores -->
+      <div class="table-container">
+        <table class="monitors-table">
+          <thead>
+            <tr>
+              <th>NOME</th>
+              <th>ENDEREÇO</th>
+              <th>PORTA</th>
+              <th>LATÊNCIA</th>
+              <th>TENDÊNCIA (60MIN)</th>
+              <th>UPTIME 24H</th>
+              <th>ÚLTIMA VERIFICAÇÃO</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="monitorsList">
+            <!-- Renderizado via JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
   </div>
 
-  <div class="app-container">
-    <!-- Sidebar -->
-    <nav class="sidebar">
-      <div class="nav-item active" id="navMonitor">
-        <span>📊</span> Monitoramento
-      </div>
-      <div class="nav-item" id="navSettings">
-        <span>⚙️</span> Configurações
-      </div>
-      <div style="flex: 1"></div>
-      <div class="nav-item" id="navAbout">
-        <span>ℹ️</span> Sobre
-      </div>
-    </nav>
-
-    <!-- Content Area -->
-    <main class="content">
-      <!-- Página de Monitoramento -->
-      <div id="pageMonitor" class="page">
-        <div class="content-header">
-          <h1>Monitoramento</h1>
-          <p>Visão geral de todos os serviços monitorados</p>
-        </div>
-
-        <div class="scroll-area">
-          <!-- Stats Summary -->
-          <div class="stats-grid">
-            <div class="stat-card">
-              <div class="label">Total de Hosts</div>
-              <div class="value" id="statTotal">0</div>
-            </div>
-            <div class="stat-card">
-              <div class="label">Online</div>
-              <div class="value" id="statOnline" style="color: var(--w11-success)">0</div>
-            </div>
-            <div class="stat-card">
-              <div class="label">Offline</div>
-              <div class="value" id="statOffline" style="color: var(--w11-danger)">0</div>
-            </div>
-          </div>
-
-          <!-- Ações Rápidas -->
-          <div style="display: flex; gap: 8px; margin-bottom: 16px;">
-            <button class="btn btn-primary" id="openAddModal">
-              <span>+</span> Novo Destino
-            </button>
-            <button class="btn" id="testAllBtn">
-              🔄 Atualizar Todos
-            </button>
-          </div>
-
-          <!-- Lista de Destinos (Tabela) -->
-          <table class="targets-table">
-            <thead>
-              <tr>
-                <th>NOME</th>
-                <th>ENDEREÇO</th>
-                <th>TIPO</th>
-                <th>STATUS</th>
-                <th>LATÊNCIA</th>
-                <th>AÇÕES</th>
-              </tr>
-            </thead>
-            <tbody id="targetsList">
-              <!-- Renderizado via JS -->
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- Página de Configurações -->
-      <div id="pageSettings" class="page" style="display: none;">
-        <div class="content-header">
-          <h1>Configurações</h1>
-          <p>Ajuste as preferências do sistema Atalaia</p>
-        </div>
-        <div class="scroll-area">
-          <div class="form-section">
-            <div class="field" style="margin-bottom: 16px;">
-              <label>Intervalo de Teste Automático</label>
-              <div style="display: flex; gap: 8px; align-items: center;">
-                <input type="number" id="intervalInput" value="30" min="5" style="width: 80px;">
-                <span>segundos</span>
-              </div>
-            </div>
-            <div class="field">
-              <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                <input type="checkbox" id="notificationsToggle" checked style="width: auto; height: auto;">
-                Ativar Notificações do Sistema
-              </label>
-            </div>
-            <button class="btn btn-primary" id="saveConfigBtn" style="margin-top: 20px;">
-              Salvar Configurações
-            </button>
-          </div>
-        </div>
-      </div>
-    </main>
-  </div>
-
-  <!-- Modal para Adicionar Destino -->
-  <div class="overlay" id="addModal">
+  <!-- Modal para Adicionar Monitor -->
+  <div class="modal-overlay" id="addModal">
     <div class="modal">
       <div class="modal-header">
-        <h2>Adicionar Destino</h2>
+        <h2>Novo Monitor</h2>
+        <button class="modal-close" id="closeAddModal">✕</button>
       </div>
-      <div class="form-group" style="display: flex; flex-direction: column; gap: 12px;">
-        <div class="field">
+      <div class="modal-body">
+        <div class="form-group">
           <label>Nome do Host</label>
           <input type="text" id="nameInput" placeholder="Ex: Servidor Produção">
         </div>
-        <div class="field">
+        <div class="form-group">
           <label>Endereço IP / Hostname</label>
           <input type="text" id="ipInput" placeholder="Ex: 192.168.1.1">
         </div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-          <div class="field">
+        <div class="form-row">
+          <div class="form-group">
             <label>Tipo de Teste</label>
             <select id="typeSelect">
               <option value="port">Porta TCP</option>
               <option value="ping">Ping (ICMP)</option>
             </select>
           </div>
-          <div class="field" id="portFieldContainer">
+          <div class="form-group" id="portFieldContainer">
             <label>Porta</label>
-            <input type="number" id="portInput" placeholder="Ex: 80">
+            <input type="number" id="portInput" placeholder="Ex: 80" min="1" max="65535">
           </div>
         </div>
       </div>
       <div class="modal-footer">
-        <button class="btn" id="closeAddModal">Cancelar</button>
+        <button class="btn" id="cancelAddBtn">Cancelar</button>
         <button class="btn btn-primary" id="addBtn">Adicionar</button>
       </div>
     </div>

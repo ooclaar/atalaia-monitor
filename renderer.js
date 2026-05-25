@@ -5,161 +5,130 @@ let targets = [];
 let testInterval = 30;
 let autoTestTimer = null;
 let notificationsEnabled = true;
+let searchQuery = '';
+let nextCheckIn = 30;
+let countdownTimer = null;
 
 // Elementos do DOM
+const monitorsList = document.getElementById('monitorsList');
+const searchBox = document.getElementById('searchBox');
+const headerSubtitle = document.getElementById('headerSubtitle');
+
+// Stats Cards
+const cardOnline = document.getElementById('cardOnline');
+const cardSlow = document.getElementById('cardSlow');
+const cardOffline = document.getElementById('cardOffline');
+const cardLatency = document.getElementById('cardLatency');
+const cardUptime = document.getElementById('cardUptime');
+
+// Modais e Botões
+const addModal = document.getElementById('addModal');
+const openAddModal = document.getElementById('openAddModal');
+const closeAddModal = document.getElementById('closeAddModal');
+const cancelAddBtn = document.getElementById('cancelAddBtn');
+const addBtn = document.getElementById('addBtn');
+const testAllBtn = document.getElementById('testAllBtn');
+
+// Inputs do Modal
+const nameInput = document.getElementById('nameInput');
 const ipInput = document.getElementById('ipInput');
 const typeSelect = document.getElementById('typeSelect');
 const portInput = document.getElementById('portInput');
 const portFieldContainer = document.getElementById('portFieldContainer');
-const nameInput = document.getElementById('nameInput');
-const addBtn = document.getElementById('addBtn');
-const testAllBtn = document.getElementById('testAllBtn');
-const intervalInput = document.getElementById('intervalInput');
-const saveConfigBtn = document.getElementById('saveConfigBtn');
-const notificationsToggle = document.getElementById('notificationsToggle');
-const targetsList = document.getElementById('targetsList');
-
-// Modais e Navegação
-const addModal = document.getElementById('addModal');
-const openAddModal = document.getElementById('openAddModal');
-const closeAddModal = document.getElementById('closeAddModal');
-const navMonitor = document.getElementById('navMonitor');
-const navSettings = document.getElementById('navSettings');
-const pageMonitor = document.getElementById('pageMonitor');
-const pageSettings = document.getElementById('pageSettings');
-
-// Stats
-const statTotal = document.getElementById('statTotal');
-const statOnline = document.getElementById('statOnline');
-const statOffline = document.getElementById('statOffline');
 
 // Inicialização
 function init() {
   loadData();
-  renderTargets();
+  renderMonitors();
   startAutoTest();
+  startCountdown();
   setupEventListeners();
 }
 
 function setupEventListeners() {
-  // Navegação
-  navMonitor.addEventListener('click', () => switchPage('monitor'));
-  navSettings.addEventListener('click', () => switchPage('settings'));
+  // Modal
+  openAddModal.addEventListener('click', () => addModal.classList.add('active'));
+  closeAddModal.addEventListener('click', () => addModal.classList.remove('active'));
+  cancelAddBtn.addEventListener('click', () => addModal.classList.remove('active'));
 
-  // Modais
-  openAddModal.addEventListener('click', () => addModal.style.display = 'flex');
-  closeAddModal.addEventListener('click', () => addModal.style.display = 'none');
-
-  // Tipo de Teste
+  // Tipo de Teste no Modal
   typeSelect.addEventListener('change', () => {
-    portFieldContainer.style.visibility = typeSelect.value === 'ping' ? 'hidden' : 'visible';
+    portFieldContainer.style.display = typeSelect.value === 'ping' ? 'none' : 'block';
   });
 
-  // Notificações
-  notificationsToggle.addEventListener('change', () => {
-    notificationsEnabled = notificationsToggle.checked;
-    localStorage.setItem('notificationsEnabled', notificationsEnabled);
+  // Busca
+  searchBox.addEventListener('input', (e) => {
+    searchQuery = e.target.value.toLowerCase();
+    renderMonitors();
+  });
+
+  // Ações
+  testAllBtn.addEventListener('click', () => {
+    targets.forEach(t => testConnection(t.id));
+    nextCheckIn = testInterval;
   });
 }
 
-function switchPage(page) {
-  navMonitor.classList.remove('active');
-  navSettings.classList.remove('active');
-  pageMonitor.style.display = 'none';
-  pageSettings.style.display = 'none';
-
-  if (page === 'monitor') {
-    navMonitor.classList.add('active');
-    pageMonitor.style.display = 'block';
-  } else {
-    navSettings.classList.add('active');
-    pageSettings.style.display = 'block';
-  }
-}
-
-// Carregar dados
 function loadData() {
-  const savedTargets = localStorage.getItem('targets');
-  if (savedTargets) targets = JSON.parse(savedTargets);
-
-  const savedInterval = localStorage.getItem('testInterval');
-  if (savedInterval) {
-    testInterval = parseInt(savedInterval);
-    intervalInput.value = testInterval;
-  }
-
-  const savedNotifications = localStorage.getItem('notificationsEnabled');
-  if (savedNotifications !== null) {
-    notificationsEnabled = savedNotifications === 'true';
-    notificationsToggle.checked = notificationsEnabled;
+  const saved = localStorage.getItem('atalaia_targets');
+  if (saved) {
+    targets = JSON.parse(saved);
+    // Garantir que todos tenham histórico para sparkline
+    targets.forEach(t => {
+      if (!t.history) t.history = Array(10).fill(0);
+      if (!t.uptime) t.uptime = 100;
+    });
   }
 }
 
 function saveData() {
-  localStorage.setItem('targets', JSON.stringify(targets));
-  localStorage.setItem('testInterval', testInterval.toString());
+  localStorage.setItem('atalaia_targets', JSON.stringify(targets));
 }
 
 // Adicionar novo destino
 addBtn.addEventListener('click', () => {
+  const name = nameInput.value.trim() || 'Sem nome';
   const ip = ipInput.value.trim();
   const type = typeSelect.value;
   const port = type === 'port' ? parseInt(portInput.value) : null;
-  const name = nameInput.value.trim() || 'Sem nome';
 
   if (!ip || (type === 'port' && isNaN(port))) {
-    alert('Preencha os campos corretamente.');
+    alert('Por favor, preencha os campos obrigatórios.');
     return;
   }
 
   const newTarget = {
     id: Date.now(),
-    ip,
-    port,
-    type,
     name,
+    ip,
+    type,
+    port,
     status: 'testing',
-    lastCheck: 'Nunca',
-    error: null,
-    latency: null
+    lastCheck: 'agora mesmo',
+    latency: null,
+    history: Array(10).fill(0),
+    uptime: 100,
+    category: 'Produção' // Padrão para o visual
   };
 
   targets.push(newTarget);
   saveData();
-  renderTargets();
+  renderMonitors();
   testConnection(newTarget.id);
 
-  // Limpar e fechar
+  // Reset e fechar
+  nameInput.value = '';
   ipInput.value = '';
   portInput.value = '';
-  nameInput.value = '';
-  addModal.style.display = 'none';
-});
-
-testAllBtn.addEventListener('click', () => {
-  targets.forEach(target => testConnection(target.id));
-});
-
-saveConfigBtn.addEventListener('click', () => {
-  const newInterval = parseInt(intervalInput.value);
-  if (isNaN(newInterval) || newInterval < 5) {
-    alert('Intervalo mínimo: 5 segundos.');
-    return;
-  }
-  testInterval = newInterval;
-  saveData();
-  startAutoTest();
-  alert('Configurações salvas!');
+  addModal.classList.remove('active');
 });
 
 async function testConnection(id) {
-  const index = targets.findIndex(t => t.id === id);
-  if (index === -1) return;
+  const target = targets.find(t => t.id === id);
+  if (!target) return;
 
-  const target = targets[index];
-  const oldStatus = target.status;
   target.status = 'testing';
-  renderTargets();
+  renderMonitors();
 
   try {
     const result = await ipcRenderer.invoke('check-connection', {
@@ -168,94 +137,131 @@ async function testConnection(id) {
       type: target.type
     });
 
-    if (notificationsEnabled && oldStatus !== 'testing' && oldStatus !== 'Nunca') {
-      if (oldStatus === 'online' && result.status === 'offline') {
+    target.status = result.status;
+    target.latency = result.latency || 0;
+    target.lastCheck = 'agora mesmo';
+    
+    // Atualizar histórico para sparkline
+    target.history.push(target.latency);
+    if (target.history.length > 15) target.history.shift();
+
+    // Notificação se mudar
+    if (notificationsEnabled && result.status === 'offline') {
         ipcRenderer.send('send-notification', {
           title: '⚠️ Atalaia: Host Offline',
           body: `${target.name} (${target.ip}) parou de responder!`
         });
-      } else if (oldStatus === 'offline' && result.status === 'online') {
-        ipcRenderer.send('send-notification', {
-          title: '✅ Atalaia: Host Online',
-          body: `${target.name} (${target.ip}) está de volta!`
-        });
-      }
     }
 
-    target.status = result.status;
-    target.lastCheck = result.time;
-    target.error = result.error || null;
-    target.latency = result.latency || null;
   } catch (error) {
     target.status = 'offline';
-    target.lastCheck = new Date().toLocaleTimeString();
-    target.error = error.message;
+    target.latency = 0;
   }
 
   saveData();
-  renderTargets();
+  renderMonitors();
   updateStats();
-}
-
-function deleteTarget(id) {
-  if (confirm('Deseja remover este host?')) {
-    targets = targets.filter(t => t.id !== id);
-    saveData();
-    renderTargets();
-    updateStats();
-  }
 }
 
 function startAutoTest() {
   if (autoTestTimer) clearInterval(autoTestTimer);
   autoTestTimer = setInterval(() => {
-    targets.forEach(target => testConnection(target.id));
+    targets.forEach(t => testConnection(t.id));
+    nextCheckIn = testInterval;
   }, testInterval * 1000);
 }
 
-function updateStats() {
-  statTotal.textContent = targets.length;
-  statOnline.textContent = targets.filter(t => t.status === 'online').length;
-  statOffline.textContent = targets.filter(t => t.status === 'offline').length;
+function startCountdown() {
+  if (countdownTimer) clearInterval(countdownTimer);
+  countdownTimer = setInterval(() => {
+    nextCheckIn--;
+    if (nextCheckIn < 0) nextCheckIn = testInterval;
+    updateHeader();
+  }, 1000);
 }
 
-function renderTargets() {
-  if (targets.length === 0) {
-    targetsList.innerHTML = `<tr><td colspan="6" class="empty-state">Nenhum host cadastrado.</td></tr>`;
-    updateStats();
-    return;
-  }
+function updateHeader() {
+  const onlineCount = targets.filter(t => t.status === 'online').length;
+  headerSubtitle.innerHTML = `
+    <span class="dot online"></span> 
+    ${targets.length} endpoints · última varredura agora mesmo · próxima em ${nextCheckIn}s
+  `;
+}
 
-  targetsList.innerHTML = '';
-  targets.forEach(target => {
-    const row = document.createElement('tr');
+function updateStats() {
+  const online = targets.filter(t => t.status === 'online').length;
+  const offline = targets.filter(t => t.status === 'offline').length;
+  const slow = targets.filter(t => t.status === 'online' && t.latency > 150).length;
+  
+  const avgLat = targets.length > 0 
+    ? Math.round(targets.reduce((acc, t) => acc + (t.latency || 0), 0) / targets.length) 
+    : 0;
+
+  cardOnline.textContent = online;
+  cardOffline.textContent = offline;
+  cardSlow.textContent = slow;
+  cardLatency.textContent = `${avgLat} ms`;
+  cardUptime.textContent = '99,98%'; // Simulado para o visual
+}
+
+function renderMonitors() {
+  const filtered = targets.filter(t => 
+    t.name.toLowerCase().includes(searchQuery) || 
+    t.ip.toLowerCase().includes(searchQuery)
+  );
+
+  monitorsList.innerHTML = '';
+  
+  filtered.forEach(t => {
+    const tr = document.createElement('tr');
     
-    const statusClass = `badge-${target.status}`;
-    const statusText = target.status === 'online' ? 'Online' : (target.status === 'offline' ? 'Offline' : 'Testando');
-    const displayAddr = target.type === 'ping' ? target.ip : `${target.ip}:${target.port}`;
-    const latencyText = target.latency ? `${Math.round(target.latency)}ms` : '-';
+    const statusClass = t.status === 'online' ? (t.latency > 150 ? 'slow' : 'online') : 'offline';
+    const statusText = statusClass.toUpperCase();
+    
+    // Gerar SVG Sparkline simples
+    const maxLat = Math.max(...t.history, 1);
+    const points = t.history.map((h, i) => `${(i * 10)},${32 - (h / maxLat * 30)}`).join(' ');
+    const sparkline = `
+      <svg class="sparkline" viewBox="0 0 150 32">
+        <polyline fill="none" stroke="${statusClass === 'offline' ? '#d83b01' : '#0078d4'}" stroke-width="1.5" points="${points}" />
+      </svg>
+    `;
 
-    row.innerHTML = `
-      <td><strong>${target.name}</strong></td>
-      <td>${displayAddr}</td>
-      <td>${target.type === 'ping' ? 'Ping' : 'Porta'}</td>
+    tr.innerHTML = `
       <td>
-        <span class="badge ${statusClass}">
-          <span class="dot"></span> ${statusText}
-        </span>
+        <div class="monitor-name">${t.name}</div>
+        <div class="monitor-category">${t.category || 'Infra'}</div>
       </td>
-      <td>${latencyText}</td>
+      <td>${t.ip}</td>
+      <td>${t.type === 'ping' ? '-' : t.port + ' <small style="color:#999">TCP</small>'}</td>
+      <td style="color: ${statusClass === 'slow' ? 'var(--color-slow)' : 'inherit'}">
+        ${t.latency ? t.latency + ' ms' : '-'}
+      </td>
+      <td>${sparkline}</td>
+      <td>${t.uptime}%</td>
+      <td>${t.lastCheck}</td>
       <td>
-        <button class="btn btn-icon" onclick="testConnection(${target.id})" title="Testar agora">🔄</button>
-        <button class="btn btn-icon" onclick="deleteTarget(${target.id})" title="Remover">🗑️</button>
+        <div class="action-buttons">
+          <button class="action-btn" onclick="window.testTarget(${t.id})">🔄</button>
+          <button class="action-btn" onclick="window.deleteTarget(${t.id})">🗑️</button>
+        </div>
       </td>
     `;
-    targetsList.appendChild(row);
+    monitorsList.appendChild(tr);
   });
+  
   updateStats();
+  updateHeader();
 }
 
-window.testConnection = testConnection;
-window.deleteTarget = deleteTarget;
+// Funções Globais para botões inline
+window.testTarget = (id) => testConnection(id);
+window.deleteTarget = (id) => {
+  if (confirm('Remover este monitor?')) {
+    targets = targets.filter(t => t.id !== id);
+    saveData();
+    renderMonitors();
+  }
+};
 
 init();
