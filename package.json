@@ -19,8 +19,19 @@
   "build": {
     "appId": "com.ramonalonso.atalaia",
     "productName": "Atalaia",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
     "win": {
-      "target": "portable",
+      "target": [
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
       "icon": "build/icon.ico"
     },
     "linux": {
@@ -30,9 +41,6 @@
     "mac": {
       "target": "dmg",
       "icon": "build/icon.png"
-    },
-    "directories": {
-      "output": "dist"
     },
     "files": [
       "**/*",
