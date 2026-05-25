@@ -8,96 +8,92 @@
 </head>
 <body>
   <div class="app-window">
-    <!-- Barra de Título do Windows -->
-    <div class="title-bar">
-      <div class="title-bar-content">
-        <span class="title-text">Atalaia · Health Checker</span>
+    <!-- Cabeçalho Principal -->
+    <div class="dashboard-header">
+      <div class="header-left">
+        <h1>Monitores</h1>
+        <p class="header-subtitle" id="headerSubtitle">
+          <span class="dot online"></span> 10 endpoints · última varredura há 3 segundos · próxima em 27s
+        </p>
       </div>
-      <div class="title-bar-controls">
-        <button class="title-btn">−</button>
-        <button class="title-btn">□</button>
-        <button class="title-btn close">✕</button>
+      <div class="header-right">
+        <input type="text" class="search-box" id="searchBox" placeholder="Buscar host, IP ou porta">
       </div>
     </div>
 
-    <!-- Conteúdo Principal -->
-    <div class="main-content">
-      <!-- Cabeçalho -->
-      <div class="dashboard-header">
-        <div class="header-left">
-          <h1>Monitores</h1>
-          <p class="header-subtitle" id="headerSubtitle">
-            <span class="dot online"></span> 10 endpoints · última varredura há 3 segundos · próxima em 27s
-          </p>
-        </div>
-        <div class="header-right">
-          <input type="text" class="search-box" id="searchBox" placeholder="Buscar host, IP ou porta">
-        </div>
-      </div>
-
-      <!-- Barra de Ferramentas -->
-      <div class="toolbar">
-        <div class="toolbar-left">
-          <button class="btn btn-primary" id="openAddModal">
-            <span class="btn-icon">+</span> Novo monitor
-          </button>
-          <button class="btn" id="testAllBtn">
-            <span class="btn-icon">🔄</span> Verificar agora
-          </button>
-          <button class="btn" id="pauseAllBtn">
-            <span class="btn-icon">⏸</span> Pausar todos
-          </button>
+    <!-- Barra de Ferramentas -->
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <button class="btn btn-primary" id="openAddModal">
+          <span class="btn-icon">+</span> Novo monitor
+        </button>
+        <button class="btn" id="testAllBtn">
+          <span class="btn-icon">🔄</span> Verificar agora
+        </button>
+        <button class="btn" id="pauseAllBtn">
+          <span class="btn-icon">⏸</span> Pausar todos
+        </button>
+        <div class="separator"></div>
+        <div class="filter-container">
           <button class="btn" id="filterBtn">
             <span class="btn-icon">⊙</span> Filtrar <span class="filter-badge" id="filterBadge" style="display: none;">2</span>
           </button>
-          <button class="btn" id="exportBtn">
-            <span class="btn-icon">⬇</span> Exportar
-          </button>
-        </div>
-        <div class="toolbar-right">
-          <div class="view-toggle">
-            <button class="view-btn active" data-view="table">Tabela</button>
-            <button class="view-btn" data-view="cards">Cards</button>
-            <button class="view-btn" data-view="compact">Compacto</button>
+          <div class="filter-menu" id="filterMenu" style="display: none;">
+            <label><input type="checkbox" id="filterOnline"> Online</label>
+            <label><input type="checkbox" id="filterOffline"> Offline</label>
+            <label><input type="checkbox" id="filterSlow"> Lento</label>
           </div>
+        </div>
+        <button class="btn" id="exportBtn">
+          <span class="btn-icon">⬇</span> Exportar
+        </button>
+      </div>
+      <div class="toolbar-right">
+        <div class="view-toggle">
+          <button class="view-btn active" data-view="table">Tabela</button>
+          <button class="view-btn" data-view="cards">Cards</button>
+          <button class="view-btn" data-view="compact">Compacto</button>
         </div>
       </div>
+    </div>
 
-      <!-- Cards de Status -->
-      <div class="status-cards">
-        <div class="status-card">
-          <div class="status-card-dot online"></div>
-          <div class="status-card-content">
-            <div class="status-card-label">ONLINE</div>
-            <div class="status-card-value" id="cardOnline">8</div>
-          </div>
-        </div>
-        <div class="status-card">
-          <div class="status-card-dot slow"></div>
-          <div class="status-card-content">
-            <div class="status-card-label">LENTO</div>
-            <div class="status-card-value" id="cardSlow">1</div>
-          </div>
-        </div>
-        <div class="status-card">
-          <div class="status-card-dot offline"></div>
-          <div class="status-card-content">
-            <div class="status-card-label">OFFLINE</div>
-            <div class="status-card-value" id="cardOffline">1</div>
-          </div>
-        </div>
-        <div class="status-card">
-          <div class="status-card-label-only">LAT. MÉDIA</div>
-          <div class="status-card-value" id="cardLatency">17 ms</div>
-        </div>
-        <div class="status-card">
-          <div class="status-card-label-only">UPTIME 24H</div>
-          <div class="status-card-value" id="cardUptime">99,82%</div>
+    <!-- Cards de Status -->
+    <div class="status-cards">
+      <div class="status-card">
+        <div class="status-card-dot online"></div>
+        <div class="status-card-content">
+          <div class="status-card-label">ONLINE</div>
+          <div class="status-card-value" id="cardOnline">8</div>
         </div>
       </div>
+      <div class="status-card">
+        <div class="status-card-dot slow"></div>
+        <div class="status-card-content">
+          <div class="status-card-label">LENTO</div>
+          <div class="status-card-value" id="cardSlow">1</div>
+        </div>
+      </div>
+      <div class="status-card">
+        <div class="status-card-dot offline"></div>
+        <div class="status-card-content">
+          <div class="status-card-label">OFFLINE</div>
+          <div class="status-card-value" id="cardOffline">1</div>
+        </div>
+      </div>
+      <div class="status-card">
+        <div class="status-card-label-only">LAT. MÉDIA</div>
+        <div class="status-card-value" id="cardLatency">17 ms</div>
+      </div>
+      <div class="status-card">
+        <div class="status-card-label-only">UPTIME 24H</div>
+        <div class="status-card-value" id="cardUptime">99,82%</div>
+      </div>
+    </div>
 
-      <!-- Tabela de Monitores -->
-      <div class="table-container">
+    <!-- Conteúdo Dinâmico (Tabela/Cards/Compacto) -->
+    <div class="content-area">
+      <!-- Visualização em Tabela -->
+      <div class="table-container" id="tableView">
         <table class="monitors-table">
           <thead>
             <tr>
@@ -115,6 +111,20 @@
             <!-- Renderizado via JS -->
           </tbody>
         </table>
+      </div>
+
+      <!-- Visualização em Cards -->
+      <div class="cards-container" id="cardsView" style="display: none;">
+        <div id="monitorCardsGrid">
+          <!-- Renderizado via JS -->
+        </div>
+      </div>
+
+      <!-- Visualização Compacta -->
+      <div class="compact-container" id="compactView" style="display: none;">
+        <div id="monitorCompactList">
+          <!-- Renderizado via JS -->
+        </div>
       </div>
     </div>
   </div>

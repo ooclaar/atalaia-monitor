@@ -1,6 +1,8 @@
 const { ipcRenderer } = require('electron');
 
-// Estado da Aplicação
+// ═══════════════════════════════════════════════════════════════════════════
+// ESTADO DA APLICAÇÃO
+// ═══════════════════════════════════════════════════════════════════════════
 let targets = [];
 let testInterval = 30;
 let autoTestTimer = null;
@@ -8,13 +10,18 @@ let notificationsEnabled = true;
 let searchQuery = '';
 let nextCheckIn = 30;
 let countdownTimer = null;
+let allPaused = false;
+let activeFilters = new Set();
+let currentView = 'table';
 
-// Elementos do DOM
+// ═══════════════════════════════════════════════════════════════════════════
+// ELEMENTOS DO DOM
+// ═══════════════════════════════════════════════════════════════════════════
 const monitorsList = document.getElementById('monitorsList');
+const monitorCardsGrid = document.getElementById('monitorCardsGrid');
+const monitorCompactList = document.getElementById('monitorCompactList');
 const searchBox = document.getElementById('searchBox');
 const headerSubtitle = document.getElementById('headerSubtitle');
-
-// Stats Cards
 const cardOnline = document.getElementById('cardOnline');
 const cardSlow = document.getElementById('cardSlow');
 const cardOffline = document.getElementById('cardOffline');
@@ -28,6 +35,10 @@ const closeAddModal = document.getElementById('closeAddModal');
 const cancelAddBtn = document.getElementById('cancelAddBtn');
 const addBtn = document.getElementById('addBtn');
 const testAllBtn = document.getElementById('testAllBtn');
+const pauseAllBtn = document.getElementById('pauseAllBtn');
+const filterBtn = document.getElementById('filterBtn');
+const filterMenu = document.getElementById('filterMenu');
+const filterBadge = document.getElementById('filterBadge');
 
 // Inputs do Modal
 const nameInput = document.getElementById('nameInput');
@@ -36,7 +47,14 @@ const typeSelect = document.getElementById('typeSelect');
 const portInput = document.getElementById('portInput');
 const portFieldContainer = document.getElementById('portFieldContainer');
 
-// Inicialização
+// Visualizações
+const tableView = document.getElementById('tableView');
+const cardsView = document.getElementById('cardsView');
+const compactView = document.getElementById('compactView');
+
+// ═══════════════════════════════════════════════════════════════════════════
+// INICIALIZAÇÃO
+// ═══════════════════════════════════════════════════════════════════════════
 function init() {
   loadData();
   renderMonitors();
@@ -64,19 +82,53 @@ function setupEventListeners() {
 
   // Ações
   testAllBtn.addEventListener('click', () => {
-    targets.forEach(t => testConnection(t.id));
+    targets.forEach(t => {
+      if (!t.paused) testConnection(t.id);
+    });
     nextCheckIn = testInterval;
+  });
+
+  // Pausa Global
+  pauseAllBtn.addEventListener('click', () => {
+    allPaused = !allPaused;
+    targets.forEach(t => t.paused = allPaused);
+    saveData();
+    updatePauseButton();
+    renderMonitors();
+  });
+
+  // Filtro
+  filterBtn.addEventListener('click', () => {
+    filterMenu.style.display = filterMenu.style.display === 'none' ? 'block' : 'none';
+  });
+
+  // Checkboxes de Filtro
+  document.getElementById('filterOnline').addEventListener('change', updateFilters);
+  document.getElementById('filterOffline').addEventListener('change', updateFilters);
+  document.getElementById('filterSlow').addEventListener('change', updateFilters);
+
+  // Alternância de Visualização
+  document.querySelectorAll('.view-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+      e.target.classList.add('active');
+      currentView = e.target.dataset.view;
+      renderMonitors();
+    });
   });
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// GERENCIAMENTO DE DADOS
+// ═══════════════════════════════════════════════════════════════════════════
 function loadData() {
   const saved = localStorage.getItem('atalaia_targets');
   if (saved) {
     targets = JSON.parse(saved);
-    // Garantir que todos tenham histórico para sparkline
     targets.forEach(t => {
       if (!t.history) t.history = Array(10).fill(0);
       if (!t.uptime) t.uptime = 100;
+      if (!t.paused) t.paused = false;
     });
   }
 }
@@ -85,7 +137,9 @@ function saveData() {
   localStorage.setItem('atalaia_targets', JSON.stringify(targets));
 }
 
-// Adicionar novo destino
+// ═══════════════════════════════════════════════════════════════════════════
+// ADICIONAR NOVO DESTINO
+// ═══════════════════════════════════════════════════════════════════════════
 addBtn.addEventListener('click', () => {
   const name = nameInput.value.trim() || 'Sem nome';
   const ip = ipInput.value.trim();
@@ -108,7 +162,8 @@ addBtn.addEventListener('click', () => {
     latency: null,
     history: Array(10).fill(0),
     uptime: 100,
-    category: 'Produção' // Padrão para o visual
+    category: 'Produção',
+    paused: false
   };
 
   targets.push(newTarget);
@@ -116,16 +171,18 @@ addBtn.addEventListener('click', () => {
   renderMonitors();
   testConnection(newTarget.id);
 
-  // Reset e fechar
   nameInput.value = '';
   ipInput.value = '';
   portInput.value = '';
   addModal.classList.remove('active');
 });
 
+// ═══════════════════════════════════════════════════════════════════════════
+// TESTE DE CONEXÃO
+// ═══════════════════════════════════════════════════════════════════════════
 async function testConnection(id) {
   const target = targets.find(t => t.id === id);
-  if (!target) return;
+  if (!target || target.paused) return;
 
   target.status = 'testing';
   renderMonitors();
@@ -141,16 +198,14 @@ async function testConnection(id) {
     target.latency = result.latency || 0;
     target.lastCheck = 'agora mesmo';
     
-    // Atualizar histórico para sparkline
     target.history.push(target.latency);
     if (target.history.length > 15) target.history.shift();
 
-    // Notificação se mudar
     if (notificationsEnabled && result.status === 'offline') {
-        ipcRenderer.send('send-notification', {
-          title: '⚠️ Atalaia: Host Offline',
-          body: `${target.name} (${target.ip}) parou de responder!`
-        });
+      ipcRenderer.send('send-notification', {
+        title: '⚠️ Atalaia: Host Offline',
+        body: `${target.name} (${target.ip}) parou de responder!`
+      });
     }
 
   } catch (error) {
@@ -163,10 +218,17 @@ async function testConnection(id) {
   updateStats();
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// TESTES AUTOMÁTICOS
+// ═══════════════════════════════════════════════════════════════════════════
 function startAutoTest() {
   if (autoTestTimer) clearInterval(autoTestTimer);
   autoTestTimer = setInterval(() => {
-    targets.forEach(t => testConnection(t.id));
+    if (!allPaused) {
+      targets.forEach(t => {
+        if (!t.paused) testConnection(t.id);
+      });
+    }
     nextCheckIn = testInterval;
   }, testInterval * 1000);
 }
@@ -180,6 +242,38 @@ function startCountdown() {
   }, 1000);
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// FILTROS
+// ═══════════════════════════════════════════════════════════════════════════
+function updateFilters() {
+  activeFilters.clear();
+  if (document.getElementById('filterOnline').checked) activeFilters.add('online');
+  if (document.getElementById('filterOffline').checked) activeFilters.add('offline');
+  if (document.getElementById('filterSlow').checked) activeFilters.add('slow');
+  
+  updateFilterBadge();
+  renderMonitors();
+}
+
+function updateFilterBadge() {
+  if (activeFilters.size > 0) {
+    filterBadge.textContent = activeFilters.size;
+    filterBadge.style.display = 'inline-flex';
+  } else {
+    filterBadge.style.display = 'none';
+  }
+}
+
+function applyFilters(target) {
+  if (activeFilters.size === 0) return true;
+  
+  const statusClass = target.status === 'online' ? (target.latency > 150 ? 'slow' : 'online') : 'offline';
+  return activeFilters.has(statusClass);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ATUALIZAR UI
+// ═══════════════════════════════════════════════════════════════════════════
 function updateHeader() {
   const onlineCount = targets.filter(t => t.status === 'online').length;
   headerSubtitle.innerHTML = `
@@ -201,24 +295,49 @@ function updateStats() {
   cardOffline.textContent = offline;
   cardSlow.textContent = slow;
   cardLatency.textContent = `${avgLat} ms`;
-  cardUptime.textContent = '99,98%'; // Simulado para o visual
+  cardUptime.textContent = '99,98%';
 }
 
-function renderMonitors() {
-  const filtered = targets.filter(t => 
-    t.name.toLowerCase().includes(searchQuery) || 
-    t.ip.toLowerCase().includes(searchQuery)
-  );
+function updatePauseButton() {
+  if (allPaused) {
+    pauseAllBtn.innerHTML = '<span class="btn-icon">▶</span> Continuar todos';
+  } else {
+    pauseAllBtn.innerHTML = '<span class="btn-icon">⏸</span> Pausar todos';
+  }
+}
 
+// ═══════════════════════════════════════════════════════════════════════════
+// RENDERIZAÇÃO
+// ═══════════════════════════════════════════════════════════════════════════
+function renderMonitors() {
+  const filtered = targets.filter(t => {
+    const matchSearch = t.name.toLowerCase().includes(searchQuery) || 
+                        t.ip.toLowerCase().includes(searchQuery);
+    const matchFilter = applyFilters(t);
+    return matchSearch && matchFilter;
+  });
+
+  // Mostrar/Ocultar visualizações
+  tableView.style.display = currentView === 'table' ? 'block' : 'none';
+  cardsView.style.display = currentView === 'cards' ? 'block' : 'none';
+  compactView.style.display = currentView === 'compact' ? 'block' : 'none';
+
+  if (currentView === 'table') renderTableView(filtered);
+  else if (currentView === 'cards') renderCardsView(filtered);
+  else if (currentView === 'compact') renderCompactView(filtered);
+
+  updateStats();
+  updateHeader();
+}
+
+function renderTableView(filtered) {
   monitorsList.innerHTML = '';
   
   filtered.forEach(t => {
     const tr = document.createElement('tr');
-    
     const statusClass = t.status === 'online' ? (t.latency > 150 ? 'slow' : 'online') : 'offline';
     const statusText = statusClass.toUpperCase();
     
-    // Gerar SVG Sparkline simples
     const maxLat = Math.max(...t.history, 1);
     const points = t.history.map((h, i) => `${(i * 10)},${32 - (h / maxLat * 30)}`).join(' ');
     const sparkline = `
@@ -242,20 +361,94 @@ function renderMonitors() {
       <td>${t.lastCheck}</td>
       <td>
         <div class="action-buttons">
-          <button class="action-btn" onclick="window.testTarget(${t.id})">🔄</button>
-          <button class="action-btn" onclick="window.deleteTarget(${t.id})">🗑️</button>
+          <button class="action-btn" onclick="window.testTarget(${t.id})" title="Testar agora">🔄</button>
+          <button class="action-btn" onclick="window.togglePause(${t.id})" title="${t.paused ? 'Retomar' : 'Pausar'}">${t.paused ? '▶' : '⏸'}</button>
+          <button class="action-btn" onclick="window.deleteTarget(${t.id})" title="Remover">🗑️</button>
         </div>
       </td>
     `;
     monitorsList.appendChild(tr);
   });
-  
-  updateStats();
-  updateHeader();
 }
 
-// Funções Globais para botões inline
+function renderCardsView(filtered) {
+  monitorCardsGrid.innerHTML = '';
+  
+  filtered.forEach(t => {
+    const statusClass = t.status === 'online' ? (t.latency > 150 ? 'slow' : 'online') : 'offline';
+    const card = document.createElement('div');
+    card.className = `monitor-card monitor-card-${statusClass}`;
+    card.innerHTML = `
+      <div class="card-header">
+        <div class="card-title">${t.name}</div>
+        <div class="card-status ${statusClass}">${statusClass.toUpperCase()}</div>
+      </div>
+      <div class="card-body">
+        <div class="card-row">
+          <span class="card-label">IP:</span>
+          <span class="card-value">${t.ip}</span>
+        </div>
+        <div class="card-row">
+          <span class="card-label">Porta:</span>
+          <span class="card-value">${t.type === 'ping' ? 'Ping' : t.port}</span>
+        </div>
+        <div class="card-row">
+          <span class="card-label">Latência:</span>
+          <span class="card-value">${t.latency ? t.latency + ' ms' : '-'}</span>
+        </div>
+        <div class="card-row">
+          <span class="card-label">Uptime:</span>
+          <span class="card-value">${t.uptime}%</span>
+        </div>
+      </div>
+      <div class="card-footer">
+        <button class="action-btn" onclick="window.testTarget(${t.id})">🔄 Testar</button>
+        <button class="action-btn" onclick="window.togglePause(${t.id})">${t.paused ? '▶' : '⏸'} ${t.paused ? 'Retomar' : 'Pausar'}</button>
+        <button class="action-btn" onclick="window.deleteTarget(${t.id})">🗑️</button>
+      </div>
+    `;
+    monitorCardsGrid.appendChild(card);
+  });
+}
+
+function renderCompactView(filtered) {
+  monitorCompactList.innerHTML = '';
+  
+  filtered.forEach(t => {
+    const statusClass = t.status === 'online' ? (t.latency > 150 ? 'slow' : 'online') : 'offline';
+    const row = document.createElement('div');
+    row.className = `compact-row compact-row-${statusClass}`;
+    row.innerHTML = `
+      <div class="compact-status-dot ${statusClass}"></div>
+      <div class="compact-info">
+        <div class="compact-name">${t.name}</div>
+        <div class="compact-details">${t.ip} ${t.type === 'port' ? '(' + t.port + ')' : '(Ping)'}</div>
+      </div>
+      <div class="compact-latency">${t.latency ? t.latency + 'ms' : '-'}</div>
+      <div class="compact-actions">
+        <button class="action-btn-compact" onclick="window.testTarget(${t.id})">🔄</button>
+        <button class="action-btn-compact" onclick="window.togglePause(${t.id})">${t.paused ? '▶' : '⏸'}</button>
+        <button class="action-btn-compact" onclick="window.deleteTarget(${t.id})">🗑️</button>
+      </div>
+    `;
+    monitorCompactList.appendChild(row);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// FUNÇÕES GLOBAIS
+// ═══════════════════════════════════════════════════════════════════════════
 window.testTarget = (id) => testConnection(id);
+
+window.togglePause = (id) => {
+  const target = targets.find(t => t.id === id);
+  if (target) {
+    target.paused = !target.paused;
+    saveData();
+    renderMonitors();
+  }
+};
+
 window.deleteTarget = (id) => {
   if (confirm('Remover este monitor?')) {
     targets = targets.filter(t => t.id !== id);
@@ -264,4 +457,7 @@ window.deleteTarget = (id) => {
   }
 };
 
+// ═══════════════════════════════════════════════════════════════════════════
+// INICIAR
+// ═══════════════════════════════════════════════════════════════════════════
 init();
