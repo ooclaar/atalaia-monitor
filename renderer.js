@@ -18,6 +18,7 @@ let countdownTimer = null;
 let allPaused = false;
 let activeFilters = new Set();
 let currentView = 'table';
+let currentTheme = 'light';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // ELEMENTOS DO DOM
@@ -45,6 +46,7 @@ const filterBtn = document.getElementById('filterBtn');
 const filterMenu = document.getElementById('filterMenu');
 const filterBadge = document.getElementById('filterBadge');
 const exportBtn = document.getElementById('exportBtn');
+const themeToggleBtn = document.getElementById('themeToggleBtn');
 
 // Inputs do Modal
 const nameInput = document.getElementById('nameInput');
@@ -63,6 +65,7 @@ const compactView = document.getElementById('compactView');
 // ═══════════════════════════════════════════════════════════════════════════
 function init() {
   loadData();
+  applyTheme();
   renderMonitors();
   startAutoTest();
   startCountdown();
@@ -104,8 +107,15 @@ function setupEventListeners() {
   });
 
   // Filtro
-  filterBtn.addEventListener('click', () => {
+  filterBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
     filterMenu.style.display = filterMenu.style.display === 'none' ? 'block' : 'none';
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!filterMenu.contains(e.target) && e.target !== filterBtn) {
+      filterMenu.style.display = 'none';
+    }
   });
 
   // Checkboxes de Filtro
@@ -117,6 +127,9 @@ function setupEventListeners() {
   if (exportBtn) {
     exportBtn.addEventListener('click', exportData);
   }
+
+  // Tema
+  themeToggleBtn.addEventListener('click', toggleTheme);
 
   // Alternância de Visualização
   document.querySelectorAll('.view-btn').forEach(btn => {
@@ -130,6 +143,25 @@ function setupEventListeners() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
+// TEMA
+// ═══════════════════════════════════════════════════════════════════════════
+function toggleTheme() {
+  currentTheme = currentTheme === 'light' ? 'dark' : 'light';
+  applyTheme();
+  saveData();
+}
+
+function applyTheme() {
+  if (currentTheme === 'dark') {
+    document.body.classList.add('dark-mode');
+    themeToggleBtn.innerHTML = '<span class="btn-icon">☀️</span>';
+  } else {
+    document.body.classList.remove('dark-mode');
+    themeToggleBtn.innerHTML = '<span class="btn-icon">🌙</span>';
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
 // GERENCIAMENTO DE DADOS
 // ═══════════════════════════════════════════════════════════════════════════
 function loadData() {
@@ -139,13 +171,19 @@ function loadData() {
     targets.forEach(t => {
       if (!t.history) t.history = Array(10).fill(0);
       if (!t.uptime) t.uptime = 100;
-      if (!t.paused) t.paused = false;
+      if (t.paused === undefined) t.paused = false;
     });
+  }
+  
+  const savedTheme = localStorage.getItem('atalaia_theme');
+  if (savedTheme) {
+    currentTheme = savedTheme;
   }
 }
 
 function saveData() {
   localStorage.setItem('atalaia_targets', JSON.stringify(targets));
+  localStorage.setItem('atalaia_theme', currentTheme);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -278,7 +316,15 @@ function updateFilterBadge() {
 function applyFilters(target) {
   if (activeFilters.size === 0) return true;
   
-  const statusClass = target.status === 'online' ? (target.latency > LATENCY_SLOW_THRESHOLD ? 'slow' : 'online') : 'offline';
+  let statusClass;
+  if (target.status === 'offline') {
+    statusClass = 'offline';
+  } else if (target.latency > LATENCY_SLOW_THRESHOLD) {
+    statusClass = 'slow';
+  } else {
+    statusClass = 'online';
+  }
+  
   return activeFilters.has(statusClass);
 }
 
@@ -294,7 +340,7 @@ function updateHeader() {
 }
 
 function updateStats() {
-  const online = targets.filter(t => t.status === 'online').length;
+  const online = targets.filter(t => t.status === 'online' && t.latency <= LATENCY_SLOW_THRESHOLD).length;
   const offline = targets.filter(t => t.status === 'offline').length;
   const slow = targets.filter(t => t.status === 'online' && t.latency > LATENCY_SLOW_THRESHOLD).length;
   
@@ -346,14 +392,16 @@ function renderTableView(filtered) {
   
   filtered.forEach(t => {
     const tr = document.createElement('tr');
-    const statusClass = t.status === 'online' ? (t.latency > LATENCY_SLOW_THRESHOLD ? 'slow' : 'online') : 'offline';
+    let statusClass = t.status;
+    if (t.status === 'online' && t.latency > LATENCY_SLOW_THRESHOLD) statusClass = 'slow';
+    
     const statusText = statusClass.toUpperCase();
     
     const maxLat = Math.max(...t.history, 1);
     const points = t.history.map((h, i) => `${(i * 10)},${32 - (h / maxLat * 30)}`).join(' ');
     const sparkline = `
       <svg class="sparkline" viewBox="0 0 150 32">
-        <polyline fill="none" stroke="${statusClass === 'offline' ? '#d83b01' : '#0078d4'}" stroke-width="1.5" points="${points}" />
+        <polyline fill="none" stroke="${statusClass === 'offline' ? '#d83b01' : (statusClass === 'slow' ? '#ffb900' : '#0078d4')}" stroke-width="1.5" points="${points}" />
       </svg>
     `;
 
@@ -382,7 +430,9 @@ function renderCardsView(filtered) {
   monitorCardsGrid.innerHTML = '';
   
   filtered.forEach(t => {
-    const statusClass = t.status === 'online' ? (t.latency > LATENCY_SLOW_THRESHOLD ? 'slow' : 'online') : 'offline';
+    let statusClass = t.status;
+    if (t.status === 'online' && t.latency > LATENCY_SLOW_THRESHOLD) statusClass = 'slow';
+    
     const card = document.createElement('div');
     card.className = `monitor-card status-${statusClass}`;
     
@@ -410,18 +460,25 @@ function renderCompactView(filtered) {
   monitorCompactList.innerHTML = '';
   
   filtered.forEach(t => {
-    const statusClass = t.status === 'online' ? (t.latency > LATENCY_SLOW_THRESHOLD ? 'slow' : 'online') : 'offline';
-    const li = document.createElement('li');
-    li.className = `compact-item status-${statusClass}`;
+    let statusClass = t.status;
+    if (t.status === 'online' && t.latency > LATENCY_SLOW_THRESHOLD) statusClass = 'slow';
     
-    li.innerHTML = `
-      <span class="status-dot ${statusClass}"></span>
-      <span class="compact-name">${t.name}</span>
-      <span class="compact-ip">${t.ip}</span>
-      <span class="compact-latency">${t.latency || 0}ms</span>
-      <button class="btn-icon-small" onclick="window.deleteTarget(${t.id})">✕</button>
+    const div = document.createElement('div');
+    div.className = `compact-row compact-row-${statusClass}`;
+    
+    div.innerHTML = `
+      <span class="compact-status-dot ${statusClass}"></span>
+      <div class="compact-info">
+        <div class="compact-name">${t.name}</div>
+        <div class="compact-details">${t.ip}${t.port ? ':' + t.port : ''}</div>
+      </div>
+      <div class="compact-latency">${t.latency || 0}ms</div>
+      <div class="compact-actions">
+        <button class="action-btn-compact" onclick="window.togglePause(${t.id})">${t.paused ? '▶' : '⏸'}</button>
+        <button class="action-btn-compact" onclick="window.deleteTarget(${t.id})">✕</button>
+      </div>
     `;
-    monitorCompactList.appendChild(li);
+    monitorCompactList.appendChild(div);
   });
 }
 
@@ -454,12 +511,14 @@ function exportData() {
     return;
   }
 
-  // Cabeçalho do CSV
   const headers = ['Nome', 'IP', 'Porta', 'Tipo', 'Status', 'Latência (ms)', 'Uptime 24h', 'Última Verificação'];
   
-  // Linhas de dados
   const rows = targets.map(t => {
-    const statusClass = t.status === 'online' ? (t.latency > LATENCY_SLOW_THRESHOLD ? 'Lento' : 'Online') : 'Offline';
+    let statusClass = t.status;
+    if (t.status === 'online' && t.latency > LATENCY_SLOW_THRESHOLD) statusClass = 'Lento';
+    else if (t.status === 'online') statusClass = 'Online';
+    else statusClass = 'Offline';
+    
     const lastCheck = new Date().toLocaleString('pt-BR');
     return [
       `"${t.name}"`,
@@ -473,10 +532,7 @@ function exportData() {
     ].join(',');
   });
 
-  // Montar CSV completo
   const csv = [headers.join(','), ...rows].join('\n');
-
-  // Criar blob e fazer download
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   const link = document.createElement('a');
   const url = URL.createObjectURL(blob);
