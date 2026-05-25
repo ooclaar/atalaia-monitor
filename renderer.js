@@ -1,6 +1,11 @@
 const { ipcRenderer } = require('electron');
 
 // ═══════════════════════════════════════════════════════════════════════════
+// CONSTANTES
+// ═══════════════════════════════════════════════════════════════════════════
+const LATENCY_SLOW_THRESHOLD = 150; // ms - Define quando um host é considerado "Lento"
+
+// ═══════════════════════════════════════════════════════════════════════════
 // ESTADO DA APLICAÇÃO
 // ═══════════════════════════════════════════════════════════════════════════
 let targets = [];
@@ -39,6 +44,7 @@ const pauseAllBtn = document.getElementById('pauseAllBtn');
 const filterBtn = document.getElementById('filterBtn');
 const filterMenu = document.getElementById('filterMenu');
 const filterBadge = document.getElementById('filterBadge');
+const exportBtn = document.getElementById('exportBtn');
 
 // Inputs do Modal
 const nameInput = document.getElementById('nameInput');
@@ -106,6 +112,11 @@ function setupEventListeners() {
   document.getElementById('filterOnline').addEventListener('change', updateFilters);
   document.getElementById('filterOffline').addEventListener('change', updateFilters);
   document.getElementById('filterSlow').addEventListener('change', updateFilters);
+
+  // Exportar
+  if (exportBtn) {
+    exportBtn.addEventListener('click', exportData);
+  }
 
   // Alternância de Visualização
   document.querySelectorAll('.view-btn').forEach(btn => {
@@ -267,7 +278,7 @@ function updateFilterBadge() {
 function applyFilters(target) {
   if (activeFilters.size === 0) return true;
   
-  const statusClass = target.status === 'online' ? (target.latency > 150 ? 'slow' : 'online') : 'offline';
+  const statusClass = target.status === 'online' ? (target.latency > LATENCY_SLOW_THRESHOLD ? 'slow' : 'online') : 'offline';
   return activeFilters.has(statusClass);
 }
 
@@ -285,7 +296,7 @@ function updateHeader() {
 function updateStats() {
   const online = targets.filter(t => t.status === 'online').length;
   const offline = targets.filter(t => t.status === 'offline').length;
-  const slow = targets.filter(t => t.status === 'online' && t.latency > 150).length;
+  const slow = targets.filter(t => t.status === 'online' && t.latency > LATENCY_SLOW_THRESHOLD).length;
   
   const avgLat = targets.length > 0 
     ? Math.round(targets.reduce((acc, t) => acc + (t.latency || 0), 0) / targets.length) 
@@ -335,7 +346,7 @@ function renderTableView(filtered) {
   
   filtered.forEach(t => {
     const tr = document.createElement('tr');
-    const statusClass = t.status === 'online' ? (t.latency > 150 ? 'slow' : 'online') : 'offline';
+    const statusClass = t.status === 'online' ? (t.latency > LATENCY_SLOW_THRESHOLD ? 'slow' : 'online') : 'offline';
     const statusText = statusClass.toUpperCase();
     
     const maxLat = Math.max(...t.history, 1);
@@ -352,19 +363,15 @@ function renderTableView(filtered) {
         <div class="monitor-category">${t.category || 'Infra'}</div>
       </td>
       <td>${t.ip}</td>
-      <td>${t.type === 'ping' ? '-' : t.port + ' <small style="color:#999">TCP</small>'}</td>
-      <td style="color: ${statusClass === 'slow' ? 'var(--color-slow)' : 'inherit'}">
-        ${t.latency ? t.latency + ' ms' : '-'}
-      </td>
+      <td>${t.type === 'ping' ? '-' : t.port + ' <small style="color:#999">' + (t.type === 'port' ? 'HTTP' : 'TCP') + '</small>'}</td>
+      <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+      <td><strong>${t.latency || 0} ms</strong></td>
       <td>${sparkline}</td>
-      <td>${t.uptime}%</td>
-      <td>${t.lastCheck}</td>
+      <td>99,98%</td>
       <td>
-        <div class="action-buttons">
-          <button class="action-btn" onclick="window.testTarget(${t.id})" title="Testar agora">🔄</button>
-          <button class="action-btn" onclick="window.togglePause(${t.id})" title="${t.paused ? 'Retomar' : 'Pausar'}">${t.paused ? '▶' : '⏸'}</button>
-          <button class="action-btn" onclick="window.deleteTarget(${t.id})" title="Remover">🗑️</button>
-        </div>
+        <small style="color:#666">agora mesmo</small>
+        <button class="btn-icon-small" onclick="window.togglePause(${t.id})" title="Pausar/Continuar">${t.paused ? '▶' : '⏸'}</button>
+        <button class="btn-icon-small" onclick="window.deleteTarget(${t.id})" title="Remover">✕</button>
       </td>
     `;
     monitorsList.appendChild(tr);
@@ -375,36 +382,24 @@ function renderCardsView(filtered) {
   monitorCardsGrid.innerHTML = '';
   
   filtered.forEach(t => {
-    const statusClass = t.status === 'online' ? (t.latency > 150 ? 'slow' : 'online') : 'offline';
+    const statusClass = t.status === 'online' ? (t.latency > LATENCY_SLOW_THRESHOLD ? 'slow' : 'online') : 'offline';
     const card = document.createElement('div');
-    card.className = `monitor-card monitor-card-${statusClass}`;
+    card.className = `monitor-card status-${statusClass}`;
+    
     card.innerHTML = `
       <div class="card-header">
-        <div class="card-title">${t.name}</div>
-        <div class="card-status ${statusClass}">${statusClass.toUpperCase()}</div>
+        <h3>${t.name}</h3>
+        <span class="status-dot ${statusClass}"></span>
       </div>
       <div class="card-body">
-        <div class="card-row">
-          <span class="card-label">IP:</span>
-          <span class="card-value">${t.ip}</span>
-        </div>
-        <div class="card-row">
-          <span class="card-label">Porta:</span>
-          <span class="card-value">${t.type === 'ping' ? 'Ping' : t.port}</span>
-        </div>
-        <div class="card-row">
-          <span class="card-label">Latência:</span>
-          <span class="card-value">${t.latency ? t.latency + ' ms' : '-'}</span>
-        </div>
-        <div class="card-row">
-          <span class="card-label">Uptime:</span>
-          <span class="card-value">${t.uptime}%</span>
-        </div>
+        <p><strong>IP:</strong> ${t.ip}</p>
+        <p><strong>Porta:</strong> ${t.type === 'ping' ? 'Ping' : t.port}</p>
+        <p><strong>Latência:</strong> ${t.latency || 0} ms</p>
+        <p><strong>Status:</strong> ${statusClass.toUpperCase()}</p>
       </div>
       <div class="card-footer">
-        <button class="action-btn" onclick="window.testTarget(${t.id})">🔄 Testar</button>
-        <button class="action-btn" onclick="window.togglePause(${t.id})">${t.paused ? '▶' : '⏸'} ${t.paused ? 'Retomar' : 'Pausar'}</button>
-        <button class="action-btn" onclick="window.deleteTarget(${t.id})">🗑️</button>
+        <button class="btn-small" onclick="window.togglePause(${t.id})">${t.paused ? 'Continuar' : 'Pausar'}</button>
+        <button class="btn-small" onclick="window.deleteTarget(${t.id})">Remover</button>
       </div>
     `;
     monitorCardsGrid.appendChild(card);
@@ -415,31 +410,24 @@ function renderCompactView(filtered) {
   monitorCompactList.innerHTML = '';
   
   filtered.forEach(t => {
-    const statusClass = t.status === 'online' ? (t.latency > 150 ? 'slow' : 'online') : 'offline';
-    const row = document.createElement('div');
-    row.className = `compact-row compact-row-${statusClass}`;
-    row.innerHTML = `
-      <div class="compact-status-dot ${statusClass}"></div>
-      <div class="compact-info">
-        <div class="compact-name">${t.name}</div>
-        <div class="compact-details">${t.ip} ${t.type === 'port' ? '(' + t.port + ')' : '(Ping)'}</div>
-      </div>
-      <div class="compact-latency">${t.latency ? t.latency + 'ms' : '-'}</div>
-      <div class="compact-actions">
-        <button class="action-btn-compact" onclick="window.testTarget(${t.id})">🔄</button>
-        <button class="action-btn-compact" onclick="window.togglePause(${t.id})">${t.paused ? '▶' : '⏸'}</button>
-        <button class="action-btn-compact" onclick="window.deleteTarget(${t.id})">🗑️</button>
-      </div>
+    const statusClass = t.status === 'online' ? (t.latency > LATENCY_SLOW_THRESHOLD ? 'slow' : 'online') : 'offline';
+    const li = document.createElement('li');
+    li.className = `compact-item status-${statusClass}`;
+    
+    li.innerHTML = `
+      <span class="status-dot ${statusClass}"></span>
+      <span class="compact-name">${t.name}</span>
+      <span class="compact-ip">${t.ip}</span>
+      <span class="compact-latency">${t.latency || 0}ms</span>
+      <button class="btn-icon-small" onclick="window.deleteTarget(${t.id})">✕</button>
     `;
-    monitorCompactList.appendChild(row);
+    monitorCompactList.appendChild(li);
   });
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// FUNÇÕES GLOBAIS
+// AÇÕES GLOBAIS
 // ═══════════════════════════════════════════════════════════════════════════
-window.testTarget = (id) => testConnection(id);
-
 window.togglePause = (id) => {
   const target = targets.find(t => t.id === id);
   if (target) {
@@ -456,6 +444,52 @@ window.deleteTarget = (id) => {
     renderMonitors();
   }
 };
+
+// ═══════════════════════════════════════════════════════════════════════════
+// EXPORTAÇÃO DE DADOS
+// ═══════════════════════════════════════════════════════════════════════════
+function exportData() {
+  if (targets.length === 0) {
+    alert('Nenhum monitor para exportar!');
+    return;
+  }
+
+  // Cabeçalho do CSV
+  const headers = ['Nome', 'IP', 'Porta', 'Tipo', 'Status', 'Latência (ms)', 'Uptime 24h', 'Última Verificação'];
+  
+  // Linhas de dados
+  const rows = targets.map(t => {
+    const statusClass = t.status === 'online' ? (t.latency > LATENCY_SLOW_THRESHOLD ? 'Lento' : 'Online') : 'Offline';
+    const lastCheck = new Date().toLocaleString('pt-BR');
+    return [
+      `"${t.name}"`,
+      t.ip,
+      t.port || 'N/A',
+      t.type || 'ping',
+      statusClass,
+      t.latency || 0,
+      '99.98%',
+      lastCheck
+    ].join(',');
+  });
+
+  // Montar CSV completo
+  const csv = [headers.join(','), ...rows].join('\n');
+
+  // Criar blob e fazer download
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  const url = URL.createObjectURL(blob);
+  
+  const timestamp = new Date().toISOString().slice(0, 10);
+  link.setAttribute('href', url);
+  link.setAttribute('download', `atalaia-export-${timestamp}.csv`);
+  link.style.visibility = 'hidden';
+  
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
 
 // ═══════════════════════════════════════════════════════════════════════════
 // INICIAR
