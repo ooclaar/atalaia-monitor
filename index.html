@@ -3,78 +3,149 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Atalaia - Monitoramento de Ping e Portas</title>
+  <title>Atalaia - Monitoramento</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div class="container">
-    <!-- Header -->
-    <header class="header">
-      <div class="header-content">
-        <h1>🔍 Atalaia</h1>
-        <p class="subtitle">Monitoramento Profissional de Ping e Portas em Tempo Real</p>
+  <!-- Barra de Título Customizada (Windows Style) -->
+  <div class="title-bar">
+    <span style="flex: 1">Atalaia · Monitoramento de Saúde</span>
+  </div>
+
+  <div class="app-container">
+    <!-- Sidebar -->
+    <nav class="sidebar">
+      <div class="nav-item active" id="navMonitor">
+        <span>📊</span> Monitoramento
       </div>
-    </header>
+      <div class="nav-item" id="navSettings">
+        <span>⚙️</span> Configurações
+      </div>
+      <div style="flex: 1"></div>
+      <div class="nav-item" id="navAbout">
+        <span>ℹ️</span> Sobre
+      </div>
+    </nav>
 
-    <!-- Main Content -->
-    <main class="main-content">
-      <!-- Seção de Adição -->
-      <section class="add-section">
-        <h2>Adicionar Novo Destino</h2>
-        <div class="form-group">
-          <div class="input-row">
-            <div class="input-field">
-              <label for="ipInput">Endereço IP</label>
-              <input type="text" id="ipInput" placeholder="ex: 192.168.1.1" />
+    <!-- Content Area -->
+    <main class="content">
+      <!-- Página de Monitoramento -->
+      <div id="pageMonitor" class="page">
+        <div class="content-header">
+          <h1>Monitoramento</h1>
+          <p>Visão geral de todos os serviços monitorados</p>
+        </div>
+
+        <div class="scroll-area">
+          <!-- Stats Summary -->
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="label">Total de Hosts</div>
+              <div class="value" id="statTotal">0</div>
             </div>
-            <div class="input-field">
-              <label for="typeSelect">Tipo de Teste</label>
-              <select id="typeSelect">
-                <option value="port">Porta Específica</option>
-                <option value="ping">Ping (ICMP)</option>
-              </select>
+            <div class="stat-card">
+              <div class="label">Online</div>
+              <div class="value" id="statOnline" style="color: var(--w11-success)">0</div>
             </div>
-            <div class="input-field" id="portFieldContainer">
-              <label for="portInput">Porta</label>
-              <input type="number" id="portInput" placeholder="ex: 80" min="1" max="65535" />
-            </div>
-            <div class="input-field">
-              <label for="nameInput">Nome/Descrição</label>
-              <input type="text" id="nameInput" placeholder="ex: Servidor Web" />
+            <div class="stat-card">
+              <div class="label">Offline</div>
+              <div class="value" id="statOffline" style="color: var(--w11-danger)">0</div>
             </div>
           </div>
-          <div class="button-group">
-            <button id="addBtn" class="btn btn-primary">Adicionar Destino</button>
-            <button id="testAllBtn" class="btn btn-secondary">Testar Todos Agora</button>
+
+          <!-- Ações Rápidas -->
+          <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+            <button class="btn btn-primary" id="openAddModal">
+              <span>+</span> Novo Destino
+            </button>
+            <button class="btn" id="testAllBtn">
+              🔄 Atualizar Todos
+            </button>
+          </div>
+
+          <!-- Lista de Destinos (Tabela) -->
+          <table class="targets-table">
+            <thead>
+              <tr>
+                <th>NOME</th>
+                <th>ENDEREÇO</th>
+                <th>TIPO</th>
+                <th>STATUS</th>
+                <th>LATÊNCIA</th>
+                <th>AÇÕES</th>
+              </tr>
+            </thead>
+            <tbody id="targetsList">
+              <!-- Renderizado via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Página de Configurações -->
+      <div id="pageSettings" class="page" style="display: none;">
+        <div class="content-header">
+          <h1>Configurações</h1>
+          <p>Ajuste as preferências do sistema Atalaia</p>
+        </div>
+        <div class="scroll-area">
+          <div class="form-section">
+            <div class="field" style="margin-bottom: 16px;">
+              <label>Intervalo de Teste Automático</label>
+              <div style="display: flex; gap: 8px; align-items: center;">
+                <input type="number" id="intervalInput" value="30" min="5" style="width: 80px;">
+                <span>segundos</span>
+              </div>
+            </div>
+            <div class="field">
+              <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                <input type="checkbox" id="notificationsToggle" checked style="width: auto; height: auto;">
+                Ativar Notificações do Sistema
+              </label>
+            </div>
+            <button class="btn btn-primary" id="saveConfigBtn" style="margin-top: 20px;">
+              Salvar Configurações
+            </button>
           </div>
         </div>
-      </section>
-
-      <!-- Seção de Configuração -->
-      <section class="config-section">
-        <h2>Configurações</h2>
-        <div class="config-group">
-          <label for="intervalInput">Intervalo de Teste (segundos)</label>
-          <input type="number" id="intervalInput" value="30" min="5" max="3600" />
-          <button id="saveConfigBtn" class="btn btn-small">Salvar</button>
-          <span id="autoTestStatus" class="status-badge">Auto-teste: Desativado</span>
-          <label style="margin-left: 20px;">
-            <input type="checkbox" id="notificationsToggle" checked />
-            Ativar Notificações
-          </label>
-        </div>
-      </section>
-
-      <!-- Seção de Destinos -->
-      <section class="targets-section">
-        <h2>Destinos Cadastrados</h2>
-        <div id="targetsList" class="targets-list">
-          <div class="empty-state">
-            <p>Nenhum destino cadastrado. Adicione um novo destino acima!</p>
-          </div>
-        </div>
-      </section>
+      </div>
     </main>
+  </div>
+
+  <!-- Modal para Adicionar Destino -->
+  <div class="overlay" id="addModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>Adicionar Destino</h2>
+      </div>
+      <div class="form-group" style="display: flex; flex-direction: column; gap: 12px;">
+        <div class="field">
+          <label>Nome do Host</label>
+          <input type="text" id="nameInput" placeholder="Ex: Servidor Produção">
+        </div>
+        <div class="field">
+          <label>Endereço IP / Hostname</label>
+          <input type="text" id="ipInput" placeholder="Ex: 192.168.1.1">
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div class="field">
+            <label>Tipo de Teste</label>
+            <select id="typeSelect">
+              <option value="port">Porta TCP</option>
+              <option value="ping">Ping (ICMP)</option>
+            </select>
+          </div>
+          <div class="field" id="portFieldContainer">
+            <label>Porta</label>
+            <input type="number" id="portInput" placeholder="Ex: 80">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" id="closeAddModal">Cancelar</button>
+        <button class="btn btn-primary" id="addBtn">Adicionar</button>
+      </div>
+    </div>
   </div>
 
   <script src="renderer.js"></script>
