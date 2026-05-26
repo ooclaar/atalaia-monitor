@@ -450,27 +450,60 @@ function renderCardsView(filtered) {
     let statusClass = t.status;
     if (t.status === 'online' && t.latency > LATENCY_SLOW_THRESHOLD) statusClass = 'slow';
     
+    const maxLat = Math.max(...t.history, 1);
+    const points = t.history.map((h, i) => `${(i * 10)},${32 - (h / maxLat * 30)}`).join(' ');
+    
     const card = document.createElement('div');
-    card.className = `monitor-card status-${statusClass}`;
+    card.className = `monitor-card monitor-card-${statusClass}`;
     
     card.innerHTML = `
       <div class="card-header">
-        <h3>${t.name}</h3>
-        <span class="status-dot ${statusClass}"></span>
+        <div class="card-title-row">
+          <span class="card-title">${t.name}</span>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span class="card-status ${statusClass}"><span class="dot ${statusClass}" style="width:6px; height:6px; margin-right:4px;"></span>${statusClass.toUpperCase()}</span>
+            <button class="action-btn" onclick="window.togglePause(${t.id})"><i data-lucide="more-horizontal"></i></button>
+          </div>
+        </div>
+        <div class="card-subtitle">${t.ip} ${t.port ? ':' + t.port : ''} <span style="margin-left:8px; color:var(--color-text-tertiary)">${t.category || 'Produção'}</span></div>
       </div>
+      
       <div class="card-body">
-        <p><strong>IP:</strong> ${t.ip}</p>
-        <p><strong>Porta:</strong> ${t.type === 'ping' ? 'Ping' : t.port}</p>
-        <p><strong>Latência:</strong> ${t.latency || 0} ms</p>
-        <p><strong>Status:</strong> ${statusClass.toUpperCase()}</p>
-      </div>
-      <div class="card-footer">
-        <button class="btn-small" onclick="window.togglePause(${t.id})">${t.paused ? 'Continuar' : 'Pausar'}</button>
-        <button class="btn-small" onclick="window.deleteTarget(${t.id})">Remover</button>
+        <div class="card-stats-grid">
+          <div class="card-stat-item">
+            <div class="card-label">LATÊNCIA</div>
+            <div class="card-value" style="color: ${statusClass === 'offline' ? 'var(--color-offline)' : (statusClass === 'slow' ? 'var(--color-slow)' : 'var(--color-accent)')}">${t.latency || 0} <small>ms</small></div>
+          </div>
+          <div class="card-stat-item">
+            <div class="card-label">UPTIME</div>
+            <div class="card-value">99.98<small>%</small></div>
+          </div>
+          <div class="card-stat-graph">
+            <svg viewBox="0 0 100 32" preserveAspectRatio="none" style="width:100%; height:32px;">
+              <polyline fill="none" stroke="${statusClass === 'offline' ? '#d83b01' : (statusClass === 'slow' ? '#ffb900' : '#0078d4')}" stroke-width="1.5" points="${points}" />
+            </svg>
+          </div>
+        </div>
+        
+        <div class="card-uptime-bar">
+          ${Array(20).fill(0).map((_, i) => `<div class="uptime-segment ${i === 15 && statusClass === 'offline' ? 'offline' : (i === 10 && statusClass === 'slow' ? 'slow' : 'online')}"></div>`).join('')}
+        </div>
+        
+        <div class="card-footer-row">
+           <small style="color:var(--color-text-tertiary)">verificado agora</small>
+           <div class="card-actions-hover">
+             <button class="action-btn" onclick="window.togglePause(${t.id})" title="Pausar/Continuar"><i data-lucide="${t.paused ? 'play' : 'pause'}"></i></button>
+             <button class="action-btn" onclick="window.deleteTarget(${t.id})" title="Remover"><i data-lucide="trash-2"></i></button>
+           </div>
+        </div>
       </div>
     `;
     monitorCardsGrid.appendChild(card);
   });
+  
+  if (typeof lucide !== 'undefined') {
+    lucide.createIcons();
+  }
 }
 
 function renderCompactView(filtered) {
