@@ -566,26 +566,39 @@ html, body {
 #monitorCompactList {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 8px;
+  gap: 0;
   padding: 0;
+  border: 1px solid var(--color-border-light);
+  border-radius: 4px;
+  overflow: hidden;
 }
 
 .compact-row {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  background: var(--color-surface-alt);
-  border: 1px solid var(--color-border-light);
+  gap: 12px;
+  padding: 10px 14px;
+  background: var(--color-surface);
+  border: none;
+  border-bottom: 1px solid var(--color-border-light);
+  border-right: 1px solid var(--color-border-light);
   border-left: 3px solid var(--color-border);
-  border-radius: 2px;
+  border-radius: 0;
   transition: all 0.2s;
   font-size: 12px;
 }
 
+#monitorCompactList .compact-row:nth-child(odd):nth-last-child(1),
+#monitorCompactList .compact-row:nth-child(odd):nth-last-child(2) {
+  border-bottom: none;
+}
+
+#monitorCompactList .compact-row:nth-child(even) {
+  border-right: none;
+}
+
 .compact-row:hover {
-  background: var(--color-surface);
-  border-color: var(--color-border);
+  background: var(--color-surface-alt);
 }
 
 .compact-row-online {

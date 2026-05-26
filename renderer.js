@@ -153,10 +153,10 @@ function toggleTheme() {
 
 function applyTheme() {
   if (currentTheme === 'dark') {
-    document.body.classList.add('dark-mode');
+    document.documentElement.classList.add('dark-mode');
     themeToggleBtn.innerHTML = '<span class="btn-icon">☀️</span>';
   } else {
-    document.body.classList.remove('dark-mode');
+    document.documentElement.classList.remove('dark-mode');
     themeToggleBtn.innerHTML = '<span class="btn-icon">🌙</span>';
   }
 }
