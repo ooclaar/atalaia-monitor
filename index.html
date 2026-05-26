@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Atalaia · Health Checker</title>
   <link rel="stylesheet" href="styles.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
   <div class="app-window">
@@ -25,18 +26,18 @@
     <div class="toolbar">
       <div class="toolbar-left">
         <button class="btn btn-primary" id="openAddModal">
-          <span class="btn-icon">+</span> Novo monitor
+          <i data-lucide="plus"></i> Novo monitor
         </button>
         <button class="btn" id="testAllBtn">
-          <span class="btn-icon">🔄</span> Verificar agora
+          <i data-lucide="refresh-cw"></i> Verificar agora
         </button>
         <button class="btn" id="pauseAllBtn">
-          <span class="btn-icon">⏸</span> Pausar todos
+          <i data-lucide="pause"></i> Pausar todos
         </button>
         <div class="separator"></div>
         <div class="filter-container">
           <button class="btn" id="filterBtn">
-            <span class="btn-icon">⊙</span> Filtrar <span class="filter-badge" id="filterBadge" style="display: none;">2</span>
+            <i data-lucide="filter"></i> Filtrar <span class="filter-badge" id="filterBadge" style="display: none;">2</span>
           </button>
           <div class="filter-menu" id="filterMenu" style="display: none;">
             <label><input type="checkbox" id="filterOnline"> Online</label>
@@ -45,12 +46,12 @@
           </div>
         </div>
         <button class="btn" id="exportBtn">
-          <span class="btn-icon">⬇</span> Exportar
+          <i data-lucide="download"></i> Exportar
         </button>
       </div>
       <div class="toolbar-right">
         <button class="btn" id="themeToggleBtn" title="Alternar modo escuro">
-          <span class="btn-icon">🌙</span>
+          <i data-lucide="moon"></i>
         </button>
         <div class="view-toggle">
           <button class="view-btn active" data-view="table">Tabela</button>

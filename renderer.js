@@ -70,6 +70,10 @@ function init() {
   startAutoTest();
   startCountdown();
   setupEventListeners();
+  // Inicializar ícones Lucide
+  if (typeof lucide !== 'undefined') {
+    lucide.createIcons();
+  }
 }
 
 function setupEventListeners() {
@@ -154,10 +158,14 @@ function toggleTheme() {
 function applyTheme() {
   if (currentTheme === 'dark') {
     document.documentElement.classList.add('dark-mode');
-    themeToggleBtn.innerHTML = '<span class="btn-icon">☀️</span>';
+    themeToggleBtn.innerHTML = '<i data-lucide="sun"></i>';
   } else {
     document.documentElement.classList.remove('dark-mode');
-    themeToggleBtn.innerHTML = '<span class="btn-icon">🌙</span>';
+    themeToggleBtn.innerHTML = '<i data-lucide="moon"></i>';
+  }
+  // Re-renderizar ícones Lucide após mudança de tema
+  if (typeof lucide !== 'undefined') {
+    lucide.createIcons();
   }
 }
 
