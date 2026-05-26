@@ -71,6 +71,10 @@ function init() {
   startAutoTest();
   startCountdown();
   setupEventListeners();
+  
+  // Atualizar tempos relativos a cada 10 segundos
+  setInterval(updateRelativeTimes, 10000);
+
   // Inicializar ícones Lucide
   if (typeof lucide !== 'undefined') {
     lucide.createIcons();
@@ -268,7 +272,7 @@ async function testConnection(id) {
 
     target.status = result.status;
     target.latency = result.latency || 0;
-    target.lastCheck = 'agora mesmo';
+    target.lastCheckTimestamp = Date.now();
     
     target.history.push(target.latency);
     if (target.history.length > 15) target.history.shift();
@@ -364,11 +368,38 @@ function applyFilters(target) {
 // ATUALIZAR UI
 // ═══════════════════════════════════════════════════════════════════════════
 function updateHeader() {
-  const onlineCount = targets.filter(t => t.status === 'online').length;
+  const lastScanTime = targets.length > 0 ? Math.min(...targets.map(t => Date.now() - (t.lastCheckTimestamp || 0))) : 0;
+  const lastScanText = lastScanTime < 5000 ? 'agora mesmo' : `há ${Math.floor(lastScanTime / 1000)}s`;
+
   headerSubtitle.innerHTML = `
     <span class="dot online"></span> 
-    ${targets.length} endpoints · última varredura agora mesmo · próxima em ${nextCheckIn}s
+    ${targets.length} endpoints · última varredura ${lastScanText} · próxima em ${nextCheckIn}s
   `;
+}
+
+function getRelativeTime(timestamp) {
+  if (!timestamp) return 'nunca';
+  const diff = Math.floor((Date.now() - timestamp) / 1000);
+  if (diff < 5) return 'agora mesmo';
+  if (diff < 60) return `há ${diff}s`;
+  if (diff < 3600) return `há ${Math.floor(diff / 60)}min`;
+  return `há ${Math.floor(diff / 3600)}h`;
+}
+
+function updateRelativeTimes() {
+  if (currentView === 'table') {
+    const rows = monitorsList.querySelectorAll('tr');
+    targets.forEach((t, i) => {
+      const timeEl = rows[i]?.querySelector('small');
+      if (timeEl) timeEl.textContent = getRelativeTime(t.lastCheckTimestamp);
+    });
+  } else if (currentView === 'cards') {
+    const cards = monitorCardsGrid.querySelectorAll('.monitor-card');
+    targets.forEach((t, i) => {
+      const timeEl = cards[i]?.querySelector('.card-footer-row small');
+      if (timeEl) timeEl.textContent = `verificado ${getRelativeTime(t.lastCheckTimestamp)}`;
+    });
+  }
 }
 
 function updateStats() {
@@ -450,7 +481,7 @@ function renderTableView(filtered) {
       <td>99,98%</td>
       <td style="position: relative;">
         <div style="display: flex; align-items: center; justify-content: space-between; min-width: 120px;">
-          <small style="color:#666">agora mesmo</small>
+          <small style="color:#666">${getRelativeTime(t.lastCheckTimestamp)}</small>
           <div class="action-buttons" style="margin-left: 8px;">
             <button class="action-btn" onclick="window.togglePause(${t.id})" title="Pausar/Continuar"><i data-lucide="${t.paused ? 'play' : 'pause'}"></i></button>
             <button class="action-btn" onclick="window.deleteTarget(${t.id})" title="Remover"><i data-lucide="trash-2"></i></button>
@@ -524,7 +555,7 @@ function renderCardsView(filtered) {
         </div>
         
         <div class="card-footer-row">
-           <small style="color:var(--color-text-tertiary)">verificado agora</small>
+           <small style="color:var(--color-text-tertiary)">verificado ${getRelativeTime(t.lastCheckTimestamp)}</small>
            <div class="card-actions-hover">
              <button class="action-btn" onclick="window.editTarget(${t.id})" title="Editar"><i data-lucide="edit-3"></i></button>
              <button class="action-btn" onclick="window.togglePause(${t.id})" title="Pausar/Continuar"><i data-lucide="${t.paused ? 'play' : 'pause'}"></i></button>
