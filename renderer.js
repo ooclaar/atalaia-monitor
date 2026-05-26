@@ -184,7 +184,7 @@ function loadData() {
     targets.forEach(t => {
       if (!t.history) t.history = Array(10).fill(0);
       if (!t.statusHistory) t.statusHistory = Array(20).fill('online');
-      if (!t.uptime) t.uptime = 100;
+      if (t.uptime === undefined) t.uptime = 100;
       if (t.paused === undefined) t.paused = false;
     });
   }
@@ -478,7 +478,7 @@ function renderTableView(filtered) {
       <td><span class="status-badge ${statusClass}">${statusText}</span></td>
       <td>${t.latency || 0} ms</td>
       <td>${sparkline}</td>
-      <td>99,98%</td>
+      <td>${(t.uptime !== undefined ? t.uptime : 100).toFixed(2)}%</td>
       <td style="position: relative;">
         <div style="display: flex; align-items: center; justify-content: space-between; min-width: 120px;">
           <small style="color:#666">${getRelativeTime(t.lastCheckTimestamp)}</small>
@@ -541,7 +541,7 @@ function renderCardsView(filtered) {
           </div>
           <div class="card-stat-item">
             <div class="card-label">UPTIME</div>
-            <div class="card-value">${(t.uptime || 100).toFixed(2)}<small>%</small></div>
+            <div class="card-value">${(t.uptime !== undefined ? t.uptime : 100).toFixed(2)}<small>%</small></div>
           </div>
           <div class="card-stat-graph">
             <svg viewBox="0 0 100 32" preserveAspectRatio="none" style="width:100%; height:32px;">
@@ -592,7 +592,7 @@ function renderCompactView(filtered) {
       <div class="compact-col-latency" style="color: ${statusClass === 'offline' ? 'var(--color-offline)' : (statusClass === 'slow' ? 'var(--color-slow)' : 'var(--color-accent)')}">
         ${t.status === 'offline' ? '-' : (t.latency || 0) + 'ms'}
       </div>
-      <div class="compact-col-uptime">${(t.uptime || 100).toFixed(2)}%</div>
+      <div class="compact-col-uptime">${(t.uptime !== undefined ? t.uptime : 100).toFixed(2)}%</div>
     `;
     monitorCompactList.appendChild(div);
   });
