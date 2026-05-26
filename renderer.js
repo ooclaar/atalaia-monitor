@@ -19,6 +19,7 @@ let allPaused = false;
 let activeFilters = new Set();
 let currentView = 'table';
 let currentTheme = 'light';
+let editingId = null;
 
 // ═══════════════════════════════════════════════════════════════════════════
 // ELEMENTOS DO DOM
@@ -178,6 +179,7 @@ function loadData() {
     targets = JSON.parse(saved);
     targets.forEach(t => {
       if (!t.history) t.history = Array(10).fill(0);
+      if (!t.statusHistory) t.statusHistory = Array(20).fill('online');
       if (!t.uptime) t.uptime = 100;
       if (t.paused === undefined) t.paused = false;
     });
@@ -208,25 +210,38 @@ addBtn.addEventListener('click', () => {
     return;
   }
 
-  const newTarget = {
-    id: Date.now(),
-    name,
-    ip,
-    type,
-    port,
-    status: 'testing',
-    lastCheck: 'agora mesmo',
-    latency: null,
-    history: Array(10).fill(0),
-    uptime: 100,
-    category: 'Produção',
-    paused: false
-  };
+  if (editingId) {
+    const target = targets.find(t => t.id === editingId);
+    if (target) {
+      target.name = name;
+      target.ip = ip;
+      target.type = type;
+      target.port = port;
+    }
+    editingId = null;
+    addBtn.textContent = 'Adicionar';
+  } else {
+    const newTarget = {
+      id: Date.now(),
+      name,
+      ip,
+      type,
+      port,
+      status: 'testing',
+      lastCheck: 'agora mesmo',
+      latency: null,
+      history: Array(10).fill(0),
+      statusHistory: Array(20).fill('online'),
+      uptime: 100,
+      category: 'Produção',
+      paused: false
+    };
+    targets.push(newTarget);
+    testConnection(newTarget.id);
+  }
 
-  targets.push(newTarget);
   saveData();
   renderMonitors();
-  testConnection(newTarget.id);
 
   nameInput.value = '';
   ipInput.value = '';
@@ -257,6 +272,15 @@ async function testConnection(id) {
     
     target.history.push(target.latency);
     if (target.history.length > 15) target.history.shift();
+
+    // Atualizar histórico de status para cálculo de uptime
+    if (!target.statusHistory) target.statusHistory = Array(20).fill('online');
+    target.statusHistory.push(result.status);
+    if (target.statusHistory.length > 50) target.statusHistory.shift();
+    
+    // Calcular Uptime Real
+    const successfulTests = target.statusHistory.filter(s => s === 'online' || s === 'slow').length;
+    target.uptime = (successfulTests / target.statusHistory.length) * 100;
 
     if (notificationsEnabled && result.status === 'offline') {
       ipcRenderer.send('send-notification', {
@@ -456,13 +480,23 @@ function renderCardsView(filtered) {
     const card = document.createElement('div');
     card.className = `monitor-card monitor-card-${statusClass}`;
     
+    const uptimeSegments = (t.statusHistory || Array(20).fill('online')).slice(-20);
+    const uptimeBarHtml = uptimeSegments.map(s => `<div class="uptime-segment ${s}"></div>`).join('');
+
     card.innerHTML = `
       <div class="card-header">
         <div class="card-title-row">
           <span class="card-title">${t.name}</span>
           <div style="display: flex; align-items: center; gap: 8px;">
             <span class="card-status ${statusClass}"><span class="dot ${statusClass}" style="width:6px; height:6px; margin-right:4px;"></span>${statusClass.toUpperCase()}</span>
-            <button class="action-btn" onclick="window.togglePause(${t.id})"><i data-lucide="more-horizontal"></i></button>
+            <div class="dropdown">
+              <button class="action-btn dropdown-toggle" onclick="window.toggleDropdown(${t.id})"><i data-lucide="more-horizontal"></i></button>
+              <div id="dropdown-${t.id}" class="dropdown-content">
+                <a href="#" onclick="window.editTarget(${t.id})"><i data-lucide="edit-3"></i> Editar</a>
+                <a href="#" onclick="window.togglePause(${t.id})"><i data-lucide="${t.paused ? 'play' : 'pause'}"></i> ${t.paused ? 'Retomar' : 'Pausar'}</a>
+                <a href="#" onclick="window.deleteTarget(${t.id})" class="delete"><i data-lucide="trash-2"></i> Remover</a>
+              </div>
+            </div>
           </div>
         </div>
         <div class="card-subtitle">${t.ip} ${t.port ? ':' + t.port : ''} <span style="margin-left:8px; color:var(--color-text-tertiary)">${t.category || 'Produção'}</span></div>
@@ -472,11 +506,11 @@ function renderCardsView(filtered) {
         <div class="card-stats-grid">
           <div class="card-stat-item">
             <div class="card-label">LATÊNCIA</div>
-            <div class="card-value" style="color: ${statusClass === 'offline' ? 'var(--color-offline)' : (statusClass === 'slow' ? 'var(--color-slow)' : 'var(--color-accent)')}">${t.latency || 0} <small>ms</small></div>
+            <div class="card-value" style="color: ${statusClass === 'offline' ? 'var(--color-offline)' : (statusClass === 'slow' ? 'var(--color-slow)' : 'var(--color-accent)')}">${t.status === 'offline' ? '-' : (t.latency || 0)} <small>ms</small></div>
           </div>
           <div class="card-stat-item">
             <div class="card-label">UPTIME</div>
-            <div class="card-value">99.98<small>%</small></div>
+            <div class="card-value">${(t.uptime || 100).toFixed(2)}<small>%</small></div>
           </div>
           <div class="card-stat-graph">
             <svg viewBox="0 0 100 32" preserveAspectRatio="none" style="width:100%; height:32px;">
@@ -486,12 +520,13 @@ function renderCardsView(filtered) {
         </div>
         
         <div class="card-uptime-bar">
-          ${Array(20).fill(0).map((_, i) => `<div class="uptime-segment ${i === 15 && statusClass === 'offline' ? 'offline' : (i === 10 && statusClass === 'slow' ? 'slow' : 'online')}"></div>`).join('')}
+          ${uptimeBarHtml}
         </div>
         
         <div class="card-footer-row">
            <small style="color:var(--color-text-tertiary)">verificado agora</small>
            <div class="card-actions-hover">
+             <button class="action-btn" onclick="window.editTarget(${t.id})" title="Editar"><i data-lucide="edit-3"></i></button>
              <button class="action-btn" onclick="window.togglePause(${t.id})" title="Pausar/Continuar"><i data-lucide="${t.paused ? 'play' : 'pause'}"></i></button>
              <button class="action-btn" onclick="window.deleteTarget(${t.id})" title="Remover"><i data-lucide="trash-2"></i></button>
            </div>
@@ -526,7 +561,7 @@ function renderCompactView(filtered) {
       <div class="compact-col-latency" style="color: ${statusClass === 'offline' ? 'var(--color-offline)' : (statusClass === 'slow' ? 'var(--color-slow)' : 'var(--color-accent)')}">
         ${t.status === 'offline' ? '-' : (t.latency || 0) + 'ms'}
       </div>
-      <div class="compact-col-uptime">99.98%</div>
+      <div class="compact-col-uptime">${(t.uptime || 100).toFixed(2)}%</div>
     `;
     monitorCompactList.appendChild(div);
   });
@@ -549,6 +584,41 @@ window.deleteTarget = (id) => {
     targets = targets.filter(t => t.id !== id);
     saveData();
     renderMonitors();
+  }
+};
+
+window.editTarget = (id) => {
+  const target = targets.find(t => t.id === id);
+  if (target) {
+    editingId = id;
+    nameInput.value = target.name;
+    ipInput.value = target.ip;
+    typeSelect.value = target.type;
+    portInput.value = target.port || '';
+    portFieldContainer.style.display = target.type === 'ping' ? 'none' : 'block';
+    
+    document.getElementById('modalTitle').textContent = 'Editar Monitor';
+    addBtn.textContent = 'Salvar Alterações';
+    addModal.classList.add('active');
+  }
+};
+
+window.toggleDropdown = (id) => {
+  const dropdown = document.getElementById(`dropdown-${id}`);
+  const allDropdowns = document.querySelectorAll('.dropdown-content');
+  
+  allDropdowns.forEach(d => {
+    if (d.id !== `dropdown-${id}`) d.classList.remove('show');
+  });
+  
+  dropdown.classList.toggle('show');
+};
+
+// Fechar dropdown ao clicar fora
+window.onclick = function(event) {
+  if (!event.target.matches('.dropdown-toggle') && !event.target.closest('.dropdown-toggle')) {
+    const dropdowns = document.querySelectorAll('.dropdown-content');
+    dropdowns.forEach(d => d.classList.remove('show'));
   }
 };
 

@@ -473,6 +473,57 @@ html, body {
   color: var(--color-text);
 }
 
+/* Dropdown Menu */
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.dropdown-content {
+  display: none;
+  position: absolute;
+  right: 0;
+  background-color: var(--color-surface);
+  min-width: 140px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  z-index: 1000;
+  margin-top: 4px;
+}
+
+.dropdown-content.show {
+  display: block;
+}
+
+.dropdown-content a {
+  color: var(--color-text);
+  padding: 8px 12px;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  transition: background 0.1s;
+}
+
+.dropdown-content a:hover {
+  background-color: var(--color-surface-alt);
+}
+
+.dropdown-content a i {
+  width: 14px;
+  height: 14px;
+}
+
+.dropdown-content a.delete {
+  color: var(--color-offline);
+}
+
+.dropdown-content a.delete:hover {
+  background-color: var(--color-offline-bg);
+}
+
 /* Cards View */
 .cards-container {
   flex: 1;
