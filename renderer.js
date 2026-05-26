@@ -517,16 +517,16 @@ function renderCompactView(filtered) {
     div.className = `compact-row compact-row-${statusClass}`;
     
     div.innerHTML = `
-      <span class="compact-status-dot ${statusClass}"></span>
-      <div class="compact-info">
-        <div class="compact-name">${t.name}</div>
-        <div class="compact-details">${t.ip}${t.port ? ':' + t.port : ''}</div>
+      <div class="compact-col-status">
+        <span class="dot ${statusClass}" style="width:8px; height:8px;"></span>
       </div>
-      <div class="compact-latency">${t.latency || 0}ms</div>
-      <div class="compact-actions">
-        <button class="action-btn-compact" onclick="window.togglePause(${t.id})">${t.paused ? '▶' : '⏸'}</button>
-        <button class="action-btn-compact" onclick="window.deleteTarget(${t.id})">✕</button>
+      <div class="compact-col-name">${t.name}</div>
+      <div class="compact-col-ip">${t.ip}</div>
+      <div class="compact-col-port">${t.port ? ':' + t.port : ''}</div>
+      <div class="compact-col-latency" style="color: ${statusClass === 'offline' ? 'var(--color-offline)' : (statusClass === 'slow' ? 'var(--color-slow)' : 'var(--color-accent)')}">
+        ${t.status === 'offline' ? '-' : (t.latency || 0) + 'ms'}
       </div>
+      <div class="compact-col-uptime">99.98%</div>
     `;
     monitorCompactList.appendChild(div);
   });
