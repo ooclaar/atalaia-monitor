@@ -425,13 +425,22 @@ function renderTableView(filtered) {
       <td>${sparkline}</td>
       <td>99,98%</td>
       <td>
-        <small style="color:#666">agora mesmo</small>
-        <button class="btn-icon-small" onclick="window.togglePause(${t.id})" title="Pausar/Continuar">${t.paused ? '▶' : '⏸'}</button>
-        <button class="btn-icon-small" onclick="window.deleteTarget(${t.id})" title="Remover">✕</button>
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+          <small style="color:#666">agora mesmo</small>
+          <div class="action-buttons">
+            <button class="action-btn" onclick="window.togglePause(${t.id})" title="Pausar/Continuar"><i data-lucide="${t.paused ? 'play' : 'pause'}"></i></button>
+            <button class="action-btn" onclick="window.deleteTarget(${t.id})" title="Remover"><i data-lucide="trash-2"></i></button>
+          </div>
+        </div>
       </td>
     `;
     monitorsList.appendChild(tr);
   });
+  
+  // Re-renderizar ícones Lucide após renderizar a tabela
+  if (typeof lucide !== 'undefined') {
+    lucide.createIcons();
+  }
 }
 
 function renderCardsView(filtered) {

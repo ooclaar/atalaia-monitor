@@ -441,15 +441,21 @@ html, body {
 
 .action-buttons {
   display: flex;
-  gap: 4px;
+  gap: 8px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.monitors-table tbody tr:hover .action-buttons {
+  opacity: 1;
 }
 
 .action-btn {
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   padding: 0;
-  border: 1px solid var(--color-border);
-  background: var(--color-surface);
+  border: none;
+  background: transparent;
   border-radius: 3px;
   cursor: pointer;
   font-size: 12px;
@@ -457,11 +463,12 @@ html, body {
   align-items: center;
   justify-content: center;
   transition: all 0.2s;
+  color: var(--color-text-secondary);
 }
 
 .action-btn:hover {
   background: var(--color-surface-alt);
-  border-color: #d0d0d0;
+  color: var(--color-text);
 }
 
 /* Cards View */
