@@ -44,9 +44,9 @@ i[data-lucide] {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 14px;
-  height: 14px;
-  margin-right: 6px;
+  width: 12px;
+  height: 12px;
+  margin-right: 4px;
   stroke-width: 2.5;
   flex-shrink: 0;
 }
@@ -407,15 +407,17 @@ html, body {
   text-align: left;
   font-weight: 600;
   color: var(--color-text-secondary);
-  font-size: 11px;
+  font-size: 10px;
   text-transform: uppercase;
   border-bottom: 1px solid var(--color-border);
+  white-space: nowrap;
 }
 
 .monitors-table td {
-  padding: 12px 8px;
+  padding: 10px 8px;
   border-bottom: 1px solid var(--color-border-light);
   vertical-align: middle;
+  white-space: nowrap;
 }
 
 .monitors-table tbody tr:hover {
@@ -451,14 +453,14 @@ html, body {
 }
 
 .action-btn {
-  width: 24px;
-  height: 24px;
+  width: 20px;
+  height: 20px;
   padding: 0;
   border: none;
   background: transparent;
   border-radius: 3px;
   cursor: pointer;
-  font-size: 12px;
+  font-size: 11px;
   display: flex;
   align-items: center;
   justify-content: center;

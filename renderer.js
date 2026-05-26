@@ -421,13 +421,13 @@ function renderTableView(filtered) {
       <td>${t.ip}</td>
       <td>${t.type === 'ping' ? '-' : t.port + ' <small style="color:#999">' + (t.type === 'port' ? 'HTTP' : 'TCP') + '</small>'}</td>
       <td><span class="status-badge ${statusClass}">${statusText}</span></td>
-      <td><strong>${t.latency || 0} ms</strong></td>
+      <td>${t.latency || 0} ms</td>
       <td>${sparkline}</td>
       <td>99,98%</td>
-      <td>
-        <div style="display: flex; align-items: center; justify-content: space-between;">
+      <td style="position: relative;">
+        <div style="display: flex; align-items: center; justify-content: space-between; min-width: 120px;">
           <small style="color:#666">agora mesmo</small>
-          <div class="action-buttons">
+          <div class="action-buttons" style="margin-left: 8px;">
             <button class="action-btn" onclick="window.togglePause(${t.id})" title="Pausar/Continuar"><i data-lucide="${t.paused ? 'play' : 'pause'}"></i></button>
             <button class="action-btn" onclick="window.deleteTarget(${t.id})" title="Remover"><i data-lucide="trash-2"></i></button>
           </div>
