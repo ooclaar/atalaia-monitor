@@ -44,10 +44,11 @@ i[data-lucide] {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 18px;
-  height: 18px;
+  width: 14px;
+  height: 14px;
   margin-right: 6px;
-  stroke-width: 2;
+  stroke-width: 2.5;
+  flex-shrink: 0;
 }
 
 i[data-lucide] svg {
