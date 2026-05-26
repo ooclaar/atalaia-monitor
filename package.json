@@ -33,8 +33,6 @@
         }
       ],
       "icon": "build/icon.ico",
-      "certificateFile": null,
-      "certificatePassword": null,
       "signingHashAlgorithms": ["sha256"]
     },
     "linux": {
@@ -43,7 +41,11 @@
     },
     "mac": {
       "target": "dmg",
-      "icon": "build/icon.png"
+      "icon": "build/icon.png",
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist"
     },
     "files": [
       "**/*",
