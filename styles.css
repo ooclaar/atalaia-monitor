@@ -474,19 +474,47 @@ html, body {
 }
 
 /* Hover Actions Unified */
-.action-buttons {
+.col-last-check {
+  width: 140px;
+  min-width: 140px;
+}
+
+.last-check-wrapper {
+  position: relative;
+  height: 20px;
   display: flex;
-  gap: 4px;
-  opacity: 0;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.last-check-text {
+  color: var(--color-text-tertiary);
   transition: opacity 0.2s;
+}
+
+.action-buttons {
+  position: absolute;
+  right: 0;
+  display: flex;
+  gap: 6px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+  background: var(--color-surface-alt);
+}
+
+tr:hover .last-check-text {
+  opacity: 0;
 }
 
 tr:hover .action-buttons {
   opacity: 1;
+  pointer-events: auto;
 }
 
-tr:hover small {
-  display: none;
+.action-btn i {
+  width: 12px !important;
+  height: 12px !important;
 }
 
 /* Cards View */

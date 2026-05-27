@@ -487,10 +487,10 @@ function renderTableView(filtered) {
       <td>${t.latency || 0} ms</td>
       <td>${sparkline}</td>
       <td>${(t.uptime !== undefined ? t.uptime : 100).toFixed(2)}%</td>
-      <td style="position: relative;">
-        <div style="display: flex; align-items: center; justify-content: space-between; min-width: 120px;">
-          <small style="color:#666">${getRelativeTime(t.lastCheckTimestamp)}</small>
-          <div class="action-buttons" style="margin-left: 8px;">
+      <td class="col-last-check">
+        <div class="last-check-wrapper">
+          <small class="last-check-text">${getRelativeTime(t.lastCheckTimestamp)}</small>
+          <div class="action-buttons">
             <button class="action-btn" onclick="window.editTarget(${t.id})" title="Editar"><i data-lucide="edit-3"></i></button>
             <button class="action-btn" onclick="window.togglePause(${t.id})" title="Pausar/Continuar"><i data-lucide="${t.paused ? 'play' : 'pause'}"></i></button>
             <button class="action-btn" onclick="window.deleteTarget(${t.id})" title="Remover"><i data-lucide="trash-2"></i></button>
