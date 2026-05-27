@@ -728,7 +728,7 @@ tr:hover .action-buttons {
 .compact-col-name { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .compact-col-ip { color: var(--color-text-secondary); font-family: monospace; }
 .compact-col-port { color: var(--color-text-tertiary); }
-.compact-col-latency { font-weight: 600; text-align: right; }
+.compact-col-latency { font-weight: 600; text-align: right; padding-right: 12px; }
 .compact-col-uptime { color: var(--color-text-secondary); text-align: right; }
 
 .compact-actions {
