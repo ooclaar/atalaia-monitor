@@ -22,8 +22,14 @@ jobs:
           cache: 'npm'
           
       - name: Instalar Dependências
-        run: npm install
-        
+        run: |
+          npm config set fetch-retries 5
+          npm config set fetch-retry-mintimeout 20000
+          npm config set fetch-retry-maxtimeout 120000
+          npm install --no-audit --no-fund
+        env:
+          ELECTRON_GET_USE_PROXY: 1
+          
       - name: Build da Aplicação (Windows/Linux)
         if: matrix.os != 'macos-latest'
         run: npm run build
