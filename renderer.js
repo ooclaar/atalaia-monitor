@@ -491,6 +491,7 @@ function renderTableView(filtered) {
         <div style="display: flex; align-items: center; justify-content: space-between; min-width: 120px;">
           <small style="color:#666">${getRelativeTime(t.lastCheckTimestamp)}</small>
           <div class="action-buttons" style="margin-left: 8px;">
+            <button class="action-btn" onclick="window.editTarget(${t.id})" title="Editar"><i data-lucide="edit-3"></i></button>
             <button class="action-btn" onclick="window.togglePause(${t.id})" title="Pausar/Continuar"><i data-lucide="${t.paused ? 'play' : 'pause'}"></i></button>
             <button class="action-btn" onclick="window.deleteTarget(${t.id})" title="Remover"><i data-lucide="trash-2"></i></button>
           </div>
@@ -528,14 +529,6 @@ function renderCardsView(filtered) {
           <span class="card-title">${t.name}</span>
           <div style="display: flex; align-items: center; gap: 8px;">
             <span class="card-status ${statusClass}"><span class="dot ${statusClass}" style="width:6px; height:6px; margin-right:4px;"></span>${statusClass.toUpperCase()}</span>
-            <div class="dropdown">
-              <button class="action-btn dropdown-toggle" onclick="window.toggleDropdown(${t.id})"><i data-lucide="more-horizontal"></i></button>
-              <div id="dropdown-${t.id}" class="dropdown-content">
-                <a href="#" onclick="window.editTarget(${t.id})"><i data-lucide="edit-3"></i> Editar</a>
-                <a href="#" onclick="window.togglePause(${t.id})"><i data-lucide="${t.paused ? 'play' : 'pause'}"></i> ${t.paused ? 'Retomar' : 'Pausar'}</a>
-                <a href="#" onclick="window.deleteTarget(${t.id})" class="delete"><i data-lucide="trash-2"></i> Remover</a>
-              </div>
-            </div>
           </div>
         </div>
         <div class="card-subtitle">${t.ip} ${t.port ? ':' + t.port : ''} <span style="margin-left:8px; color:var(--color-text-tertiary)">${t.category || 'Produção'}</span></div>
@@ -601,6 +594,11 @@ function renderCompactView(filtered) {
         ${t.status === 'offline' ? '-' : (t.latency || 0) + 'ms'}
       </div>
       <div class="compact-col-uptime">${(t.uptime !== undefined ? t.uptime : 100).toFixed(2)}%</div>
+      <div class="compact-actions">
+        <button class="action-btn" onclick="window.editTarget(${t.id})" title="Editar"><i data-lucide="edit-3"></i></button>
+        <button class="action-btn" onclick="window.togglePause(${t.id})" title="Pausar/Continuar"><i data-lucide="${t.paused ? 'play' : 'pause'}"></i></button>
+        <button class="action-btn" onclick="window.deleteTarget(${t.id})" title="Remover"><i data-lucide="trash-2"></i></button>
+      </div>
     `;
     monitorCompactList.appendChild(div);
   });
@@ -642,24 +640,7 @@ window.editTarget = (id) => {
   }
 };
 
-window.toggleDropdown = (id) => {
-  const dropdown = document.getElementById(`dropdown-${id}`);
-  const allDropdowns = document.querySelectorAll('.dropdown-content');
-  
-  allDropdowns.forEach(d => {
-    if (d.id !== `dropdown-${id}`) d.classList.remove('show');
-  });
-  
-  dropdown.classList.toggle('show');
-};
-
-// Fechar dropdown ao clicar fora
-window.onclick = function(event) {
-  if (!event.target.matches('.dropdown-toggle') && !event.target.closest('.dropdown-toggle')) {
-    const dropdowns = document.querySelectorAll('.dropdown-content');
-    dropdowns.forEach(d => d.classList.remove('show'));
-  }
-};
+// Funções de menu removidas em favor do padrão de hover unificado
 
 // ═══════════════════════════════════════════════════════════════════════════
 // EXPORTAÇÃO DE DADOS

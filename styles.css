@@ -473,55 +473,20 @@ html, body {
   color: var(--color-text);
 }
 
-/* Dropdown Menu */
-.dropdown {
-  position: relative;
-  display: inline-block;
-}
-
-.dropdown-content {
-  display: none;
-  position: absolute;
-  right: 0;
-  background-color: var(--color-surface);
-  min-width: 140px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-  border: 1px solid var(--color-border);
-  border-radius: 6px;
-  z-index: 1000;
-  margin-top: 4px;
-}
-
-.dropdown-content.show {
-  display: block;
-}
-
-.dropdown-content a {
-  color: var(--color-text);
-  padding: 8px 12px;
-  text-decoration: none;
+/* Hover Actions Unified */
+.action-buttons {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 12px;
-  transition: background 0.1s;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.2s;
 }
 
-.dropdown-content a:hover {
-  background-color: var(--color-surface-alt);
+tr:hover .action-buttons {
+  opacity: 1;
 }
 
-.dropdown-content a i {
-  width: 14px;
-  height: 14px;
-}
-
-.dropdown-content a.delete {
-  color: var(--color-offline);
-}
-
-.dropdown-content a.delete:hover {
-  background-color: var(--color-offline-bg);
+tr:hover small {
+  display: none;
 }
 
 /* Cards View */
@@ -722,6 +687,7 @@ html, body {
   font-size: 11px;
   color: var(--color-text);
   border-bottom: 1px solid var(--color-border-light);
+  position: relative;
 }
 
 .compact-row:hover {
@@ -735,60 +701,26 @@ html, body {
 .compact-col-latency { font-weight: 600; text-align: right; }
 .compact-col-uptime { color: var(--color-text-secondary); text-align: right; }
 
-.compact-status-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-.compact-status-dot.online {
-  background: var(--color-online);
-}
-
-.compact-status-dot.slow {
-  background: var(--color-slow);
-}
-
-.compact-status-dot.offline {
-  background: var(--color-offline);
-}
-
-.compact-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.compact-name {
-  font-weight: 500;
-  font-size: 12px;
-  color: var(--color-text);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.compact-details {
-  font-size: 10px;
-  color: var(--color-text-tertiary);
-  margin-top: 1px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.compact-latency {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--color-accent);
-  min-width: 45px;
-  text-align: right;
-  flex-shrink: 0;
-}
-
 .compact-actions {
+  position: absolute;
+  right: 8px;
+  top: 0;
+  bottom: 0;
   display: flex;
+  align-items: center;
   gap: 4px;
+  opacity: 0;
+  background: var(--color-surface-alt);
+  padding-left: 8px;
+  transition: opacity 0.2s;
+}
+
+.compact-row:hover .compact-actions {
+  opacity: 1;
+}
+
+.compact-row:hover .compact-col-uptime {
+  opacity: 0;
 }
 
 .action-btn-compact {
