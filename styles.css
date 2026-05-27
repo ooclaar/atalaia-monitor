@@ -736,15 +736,17 @@ tr:hover .action-buttons {
   bottom: 0;
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 2px;
   opacity: 0;
   background: var(--color-surface-alt);
   padding-left: 8px;
   transition: opacity 0.2s;
+  pointer-events: none;
 }
 
 .compact-row:hover .compact-actions {
   opacity: 1;
+  pointer-events: auto;
 }
 
 .compact-row:hover .compact-col-uptime {
@@ -752,23 +754,28 @@ tr:hover .action-buttons {
 }
 
 .action-btn-compact {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   padding: 0;
-  border: 1px solid var(--color-border);
-  background: var(--color-surface);
-  border-radius: 2px;
+  border: none;
+  background: transparent;
+  border-radius: 3px;
   cursor: pointer;
-  font-size: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.2s;
-  flex-shrink: 0;
+  color: var(--color-text-secondary);
 }
 
 .action-btn-compact:hover {
-  background: var(--color-surface-alt);
+  background: var(--color-border-light);
+  color: var(--color-text);
+}
+
+.action-btn-compact i {
+  width: 10px !important;
+  height: 10px !important;
 }
 
 /* Modal */

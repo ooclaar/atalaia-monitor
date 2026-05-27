@@ -595,9 +595,9 @@ function renderCompactView(filtered) {
       </div>
       <div class="compact-col-uptime">${(t.uptime !== undefined ? t.uptime : 100).toFixed(2)}%</div>
       <div class="compact-actions">
-        <button class="action-btn" onclick="window.editTarget(${t.id})" title="Editar"><i data-lucide="edit-3"></i></button>
-        <button class="action-btn" onclick="window.togglePause(${t.id})" title="Pausar/Continuar"><i data-lucide="${t.paused ? 'play' : 'pause'}"></i></button>
-        <button class="action-btn" onclick="window.deleteTarget(${t.id})" title="Remover"><i data-lucide="trash-2"></i></button>
+        <button class="action-btn-compact" onclick="window.editTarget(${t.id})" title="Editar"><i data-lucide="edit-3"></i></button>
+        <button class="action-btn-compact" onclick="window.togglePause(${t.id})" title="Pausar/Continuar"><i data-lucide="${t.paused ? 'play' : 'pause'}"></i></button>
+        <button class="action-btn-compact" onclick="window.deleteTarget(${t.id})" title="Remover"><i data-lucide="trash-2"></i></button>
       </div>
     `;
     monitorCompactList.appendChild(div);
