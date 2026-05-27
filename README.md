@@ -53,9 +53,7 @@ Para gerar os binários para o seu sistema operacional:
 npm run build
 ```
 
-## 🔐 Segurança e Assinatura
-Para informações sobre como assinar os binários para Windows e macOS (Code Signing), consulte o nosso guia:
-[Guia de Segurança e Assinatura](./SECURITY_AND_SIGNING.md)
+
 
 ---
 Desenvolvido com foco em **Infraestrutura e Segurança**.
