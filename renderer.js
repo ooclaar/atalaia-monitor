@@ -277,15 +277,6 @@ async function testConnection(id) {
     target.history.push(target.latency);
     if (target.history.length > 15) target.history.shift();
 
-    // Atualizar histórico de status para cálculo de uptime
-    if (!target.statusHistory) target.statusHistory = Array(20).fill('online');
-    target.statusHistory.push(result.status);
-    if (target.statusHistory.length > 50) target.statusHistory.shift();
-    
-    // Calcular Uptime Real
-    const successfulTests = target.statusHistory.filter(s => s === 'online' || s === 'slow').length;
-    target.uptime = (successfulTests / target.statusHistory.length) * 100;
-
     if (notificationsEnabled && result.status === 'offline') {
       ipcRenderer.send('send-notification', {
         title: '⚠️ Atalaia: Host Offline',
@@ -296,6 +287,18 @@ async function testConnection(id) {
   } catch (error) {
     target.status = 'offline';
     target.latency = 0;
+    target.lastCheckTimestamp = Date.now();
+    target.history.push(0);
+    if (target.history.length > 15) target.history.shift();
+  } finally {
+    // Atualizar histórico de status para cálculo de uptime SEMPRE (mesmo em falha)
+    if (!target.statusHistory) target.statusHistory = Array(20).fill('online');
+    target.statusHistory.push(target.status);
+    if (target.statusHistory.length > 50) target.statusHistory.shift();
+    
+    // Calcular Uptime Real
+    const successfulTests = target.statusHistory.filter(s => s === 'online' || s === 'slow').length;
+    target.uptime = (successfulTests / target.statusHistory.length) * 100;
   }
 
   saveData();
@@ -411,11 +414,15 @@ function updateStats() {
     ? Math.round(targets.reduce((acc, t) => acc + (t.latency || 0), 0) / targets.length) 
     : 0;
 
+  const avgUptime = targets.length > 0
+    ? (targets.reduce((acc, t) => acc + (t.uptime || 100), 0) / targets.length).toFixed(2)
+    : "100.00";
+
   cardOnline.textContent = online;
   cardOffline.textContent = offline;
   cardSlow.textContent = slow;
   cardLatency.textContent = `${avgLat} ms`;
-  cardUptime.textContent = '99,98%';
+  cardUptime.textContent = `${avgUptime}%`;
 }
 
 function updatePauseButton() {
