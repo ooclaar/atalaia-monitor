@@ -765,7 +765,7 @@ tr:hover .action-buttons {
   align-items: center;
   justify-content: center;
   transition: all 0.2s;
-  color: var(--color-text-secondary);
+  color: #fff; /* Forçar cor branca para máximo contraste no hover do compacto */
 }
 
 .action-btn-compact:hover {

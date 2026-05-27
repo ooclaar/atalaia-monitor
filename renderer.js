@@ -602,6 +602,11 @@ function renderCompactView(filtered) {
     `;
     monitorCompactList.appendChild(div);
   });
+
+  // Re-renderizar ícones Lucide após renderizar o modo compacto
+  if (typeof lucide !== 'undefined') {
+    lucide.createIcons();
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
