@@ -1,59 +1,54 @@
-# 🔍 Atalaia - Monitoramento Profissional de Infraestrutura
+# 🔍 Atalaia - Health Checker
 
-**Atalaia** é uma aplicação desktop de alta performance construída com Electron, projetada para monitoramento em tempo real de endpoints, servidores e dispositivos de rede. Com foco em clareza visual e precisão técnica, o Atalaia oferece uma visão holística da saúde da sua infraestrutura.
+**Atalaia** é uma ferramenta de monitoramento de infraestrutura leve e poderosa, desenvolvida para fornecer visibilidade em tempo real sobre a saúde de servidores, endpoints e serviços de rede.
 
-## 🚀 Novas Funcionalidades e Melhorias
+![Atalaia Dashboard](./assets/screenshot.png)
 
-### 📊 Visualização Tripla e Flexível
-Escolha o modo que melhor se adapta ao seu fluxo de trabalho:
-- **Modo Tabela:** Visão clássica e detalhada com gráficos de tendência (sparklines) e última verificação precisa.
-- **Modo Cards:** Visual moderno com destaque para latência, uptime real e barra de histórico de disponibilidade.
-- **Modo Compacto:** Layout denso em duas colunas, ideal para monitorar dezenas de hosts simultaneamente em uma única tela.
+## 📦 Download das Versões
+Baixe a versão mais recente para o seu sistema operacional diretamente das nossas releases automatizadas:
 
-### 📈 Métricas Reais e Precisas
-- **Uptime Dinâmico:** Cálculo real de disponibilidade baseado no histórico de testes (não apenas placeholders).
-- **Latência Média Global:** Resumo inteligente que ignora hosts offline para fornecer uma métrica real da saúde da rede.
-- **Tempo Relativo:** Feedback em tempo real de quando cada host foi verificado (ex: "agora mesmo", "há 30s").
+🚀 **[Baixar Atalaia (Windows, macOS, Linux)](https://github.com/ooclaar/atalaia-monitor/actions/runs/26491290408)**
 
-### 🛠️ Gestão e Controle
-- **Edição Dinâmica:** Altere nomes, IPs ou portas de monitores existentes sem precisar removê-los.
-- **Ações Rápidas em Hover:** Interface limpa onde os controles (Editar, Pausar, Remover) aparecem suavemente ao passar o mouse.
-- **Filtros Inteligentes:** Filtre seus monitores por nome, IP, porta ou categoria.
+---
 
-## 📥 Downloads e Releases
+## ✨ Funcionalidades Principais
 
-As versões mais recentes compiladas para **Windows**, **macOS** e **Linux** podem ser encontradas no link abaixo:
+### 🖥️ Interface Adaptável (3 Modos de Visualização)
+- **Tabela Detalhada:** Visão técnica completa com gráficos de tendência (sparklines).
+- **Cards Modernos:** Foco em métricas de performance e histórico visual de uptime.
+- **Modo Compacto:** Layout denso para monitoramento em larga escala.
 
-🔗 **[Últimas Releases - GitHub Actions](https://github.com/ooclaar/atalaia-monitor/actions/runs/26491290408)**
+### 📊 Métricas de Alta Precisão
+- **Uptime Real:** Cálculo dinâmico baseado no histórico efetivo de testes.
+- **Latência Inteligente:** Média global que reflete apenas hosts ativos.
+- **Tempo Relativo:** Feedback instantâneo de "há quanto tempo" ocorreu a última verificação.
 
-## 🏗️ Como Rodar e Desenvolver
+### 🛠️ Controle e Agilidade
+- **Edição em Tempo Real:** Altere configurações de monitores sem interromper o fluxo.
+- **Ações em Hover:** Interface minimalista com controles que surgem ao passar o mouse.
+- **Filtros Rápidos:** Busca instantânea por Nome, IP ou Porta.
+
+---
+
+## 🚀 Como Rodar Localmente
 
 ### Pré-requisitos
-- [Node.js](https://nodejs.org/) (v20 ou superior)
-- [pnpm](https://pnpm.io/) ou `npm`
+- [Node.js](https://nodejs.org/) (v20+)
 
 ### Instalação
 ```bash
-# Clone o repositório
 git clone https://github.com/ooclaar/atalaia-monitor.git
-
-# Entre no diretório
 cd atalaia-monitor
-
-# Instale as dependências
 npm install
-
-# Inicie em modo de desenvolvimento
 npm start
 ```
 
-### Build Multiplataforma
-Para gerar os binários para o seu sistema operacional:
+### Build do Projeto
+Para gerar o executável para sua máquina:
 ```bash
 npm run build
 ```
 
-
-
 ---
-Desenvolvido com foco em **Infraestrutura e Segurança**.
+Desenvolvido por **Chief** & Manus.
+Focado em **Segurança, Infraestrutura e Performance**.
