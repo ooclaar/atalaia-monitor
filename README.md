@@ -1,49 +1,61 @@
-# 🔍 Atalaia - Monitoramento Profissional
+# 🔍 Atalaia - Monitoramento Profissional de Infraestrutura
 
-**Atalaia** é uma aplicação desktop moderna construída com Electron para monitoramento em tempo real de destinos IP e portas. Ideal para administradores de sistemas e desenvolvedores que precisam garantir a disponibilidade de seus serviços.
+**Atalaia** é uma aplicação desktop de alta performance construída com Electron, projetada para monitoramento em tempo real de endpoints, servidores e dispositivos de rede. Com foco em clareza visual e precisão técnica, o Atalaia oferece uma visão holística da saúde da sua infraestrutura.
 
-## 🚀 Funcionalidades
+## 🚀 Novas Funcionalidades e Melhorias
 
-- **Monitoramento Duplo:** Suporte para testes de porta TCP e Ping (ICMP).
-- **Notificações Nativas:** Alertas instantâneos do sistema quando um host muda de estado.
-- **Interface Moderna:** GUI amigável, intuitiva e com suporte a temas claros/escuros (baseado no sistema).
-- **Testes Periódicos:** Intervalos configuráveis para automação do monitoramento.
-- **Histórico e Latência:** Visualize o tempo de resposta e o último horário de verificação.
-- **Multiplataforma:** Binários disponíveis para Windows, Linux e macOS.
+### 📊 Visualização Tripla e Flexível
+Escolha o modo que melhor se adapta ao seu fluxo de trabalho:
+- **Modo Tabela:** Visão clássica e detalhada com gráficos de tendência (sparklines) e última verificação precisa.
+- **Modo Cards:** Visual moderno com destaque para latência, uptime real e barra de histórico de disponibilidade.
+- **Modo Compacto:** Layout denso em duas colunas, ideal para monitorar dezenas de hosts simultaneamente em uma única tela.
 
-## 🛠️ Tecnologias
+### 📈 Métricas Reais e Precisas
+- **Uptime Dinâmico:** Cálculo real de disponibilidade baseado no histórico de testes (não apenas placeholders).
+- **Latência Média Global:** Resumo inteligente que ignora hosts offline para fornecer uma métrica real da saúde da rede.
+- **Tempo Relativo:** Feedback em tempo real de quando cada host foi verificado (ex: "agora mesmo", "há 30s").
 
-- [Electron](https://www.electronjs.org/)
-- [Node.js](https://nodejs.org/)
-- [lowdb](https://github.com/typicode/lowdb)
-- [ping](https://github.com/danielzzz/node-ping)
+### 🛠️ Gestão e Controle
+- **Edição Dinâmica:** Altere nomes, IPs ou portas de monitores existentes sem precisar removê-los.
+- **Ações Rápidas em Hover:** Interface limpa onde os controles (Editar, Pausar, Remover) aparecem suavemente ao passar o mouse.
+- **Filtros Inteligentes:** Filtre seus monitores por nome, IP, porta ou categoria.
 
-## 📦 Como Instalar e Rodar
+## 📥 Downloads e Releases
+
+As versões mais recentes compiladas para **Windows**, **macOS** e **Linux** podem ser encontradas no link abaixo:
+
+🔗 **[Últimas Releases - GitHub Actions](https://github.com/ooclaar/atalaia-monitor/actions/runs/26491290408)**
+
+## 🏗️ Como Rodar e Desenvolver
 
 ### Pré-requisitos
-- Node.js instalado em sua máquina.
+- [Node.js](https://nodejs.org/) (v20 ou superior)
+- [pnpm](https://pnpm.io/) ou `npm`
 
-### Passos
-1. Clone o repositório:
-   ```bash
-   git clone https://github.com/ooclaar/atalaia-monitor.git
-   ```
-2. Instale as dependências:
-   ```bash
-   npm install
-   ```
-3. Inicie a aplicação:
-   ```bash
-   npm start
-   ```
+### Instalação
+```bash
+# Clone o repositório
+git clone https://github.com/ooclaar/atalaia-monitor.git
 
-## 🏗️ Build (Geração de Binários)
+# Entre no diretório
+cd atalaia-monitor
 
-Para gerar os binários para o seu sistema operacional atual:
+# Instale as dependências
+npm install
+
+# Inicie em modo de desenvolvimento
+npm start
+```
+
+### Build Multiplataforma
+Para gerar os binários para o seu sistema operacional:
 ```bash
 npm run build
 ```
 
+## 🔐 Segurança e Assinatura
+Para informações sobre como assinar os binários para Windows e macOS (Code Signing), consulte o nosso guia:
+[Guia de Segurança e Assinatura](./SECURITY_AND_SIGNING.md)
+
 ---
-Desenvolvido por **Ramon Alonso**.
-Configuração de e-mail atualizada
+Desenvolvido com foco em **Infraestrutura e Segurança**.
