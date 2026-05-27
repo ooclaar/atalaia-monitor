@@ -410,8 +410,9 @@ function updateStats() {
   const offline = targets.filter(t => t.status === 'offline').length;
   const slow = targets.filter(t => t.status === 'online' && t.latency > LATENCY_SLOW_THRESHOLD).length;
   
-  const avgLat = targets.length > 0 
-    ? Math.round(targets.reduce((acc, t) => acc + (t.latency || 0), 0) / targets.length) 
+  const onlineTargets = targets.filter(t => t.status === 'online');
+  const avgLat = onlineTargets.length > 0 
+    ? Math.round(onlineTargets.reduce((acc, t) => acc + (t.latency || 0), 0) / onlineTargets.length) 
     : 0;
 
   const avgUptime = targets.length > 0
